@@ -41,7 +41,7 @@
   }
   function ensureStyles() {
     if (document.querySelector('link[data-wuyue-presence]')) return;
-    const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = '/presence.css?v=20260916-3'; link.dataset.wuyuePresence = '1'; document.head.appendChild(link);
+    const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = 'https://wuyue1337.github.io/wuyue-static/presence.css?v=20260916-3'; link.dataset.wuyuePresence = '1'; document.head.appendChild(link);
   }
   function savedPanelOpen() {
     try { return localStorage.getItem(PANEL_KEY) === '1'; } catch (_) { return false; }
@@ -94,7 +94,7 @@
       const star = followed.has(user.username) ? '<span class="presence-following" title="已关注">★</span>' : '';
       const number = user.account && user.memberNo ? `<span class="presence-member-no${Number(user.memberNo) <= 100 ? ' founder' : ''}" title="第 ${escapeHtml(user.memberNo)} 位注册用户">No.${escapeHtml(user.memberNo)}</span>` : '';
       const nameRow = `<div class="presence-name-row"><strong>${star}${escapeHtml(user.nickname || '游客')}</strong>${badge}${number}</div>`;
-      const inner = `<div class="presence-avatar-wrap"><img class="presence-avatar" src="${escapeHtml(user.avatar || '/default-avatar.jpg')}" alt=""><span class="presence-dot"></span></div><div class="presence-copy">${nameRow}<span class="presence-activity">${escapeHtml(ACTIVITY[user.activity] || ACTIVITY.browse)}</span>${user.statusMessage ? `<small>“${escapeHtml(user.statusMessage)}”</small>` : ''}</div>`;
+      const inner = `<div class="presence-avatar-wrap"><img class="presence-avatar" src="${escapeHtml(user.avatar || 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg')}" alt=""><span class="presence-dot"></span></div><div class="presence-copy">${nameRow}<span class="presence-activity">${escapeHtml(ACTIVITY[user.activity] || ACTIVITY.browse)}</span>${user.statusMessage ? `<small>“${escapeHtml(user.statusMessage)}”</small>` : ''}</div>`;
       return user.account && user.username ? `<a class="presence-user ${user.away ? 'is-away' : ''}" href="/profile/?user=${encodeURIComponent(user.username)}">${inner}</a>` : `<div class="presence-user ${user.away ? 'is-away' : ''}">${inner}</div>`;
     }).join('');
   }
