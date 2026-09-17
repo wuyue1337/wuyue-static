@@ -104,3 +104,24 @@ if (list) for (const site of websites) {
   link.append(badge, label);
   list.append(link);
 }
+
+const footer = document.querySelector('footer');
+if (footer && !footer.querySelector('.ai-assisted-badge')) {
+  if (!document.getElementById('ai-assisted-style')) {
+    const style = document.createElement('style');
+    style.id = 'ai-assisted-style';
+    style.textContent = `
+      .ai-assisted-badge{display:inline-flex;align-items:center;gap:7px;margin-left:14px;padding:5px 10px;border:1px solid #d7ddd3;border-radius:999px;background:#ffffff99;color:#62716a;font-size:12px;font-weight:700;letter-spacing:.2px;vertical-align:middle;box-shadow:0 3px 10px #24443c0a;cursor:default}
+      .ai-assisted-badge::before{content:'✦';color:#b8843f;font-size:11px;line-height:1}
+      .ai-assisted-badge small{font-size:11px;font-weight:500;color:#8a958f}
+      @media(max-width:650px){.ai-assisted-badge{margin:8px 0 0;display:inline-flex}}
+    `;
+    document.head.appendChild(style);
+  }
+
+  const aiBadge = document.createElement('span');
+  aiBadge.className = 'ai-assisted-badge';
+  aiBadge.title = '本站部分设计与代码由 AI 辅助完成，并由站长人工维护';
+  aiBadge.innerHTML = '<span>AI-assisted</span><small>· 人工维护</small>';
+  footer.querySelector('#visit-stats')?.before(aiBadge);
+}

@@ -6,6 +6,7 @@
 
   const IDLE_MS = 5 * 60 * 1000;
   const PANEL_KEY = 'wuyue-presence-open';
+  const DEFAULT_AVATAR_URL = 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg';
   const ACTIVITY = {
     browse: '🏠 正在逛霧月乐园', lol_lobby: '⚔️ 正在找 LOL 猜英雄房间', lol_play: '🎮 正在玩 LOL 猜英雄',
     guess_lobby: '🔎 正在找猜词房间', guess_play: '🎯 正在玩 霧月猜词', dodge: '✨ 正在玩闪避',
@@ -21,6 +22,10 @@
       if (!id) { id = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`; localStorage.setItem(key, id); }
       return id;
     } catch (_) { memoryVisitorId ||= `${Date.now()}-${Math.random().toString(36).slice(2)}`; return memoryVisitorId; }
+  }
+  function normalizeAvatarUrl(value) {
+    if (!value || /(?:^|\/)default-avatar\.jpg(?:[?#].*)?$/i.test(value)) return DEFAULT_AVATAR_URL;
+    return value;
   }
   function inferActivity() {
     const path = location.pathname.toLowerCase();
@@ -94,7 +99,8 @@
       const star = followed.has(user.username) ? '<span class="presence-following" title="已关注">★</span>' : '';
       const number = user.account && user.memberNo ? `<span class="presence-member-no${Number(user.memberNo) <= 100 ? ' founder' : ''}" title="第 ${escapeHtml(user.memberNo)} 位注册用户">No.${escapeHtml(user.memberNo)}</span>` : '';
       const nameRow = `<div class="presence-name-row"><strong>${star}${escapeHtml(user.nickname || '游客')}</strong>${badge}${number}</div>`;
-      const inner = `<div class="presence-avatar-wrap"><img class="presence-avatar" src="${escapeHtml(user.avatar || 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg')}" alt=""><span class="presence-dot"></span></div><div class="presence-copy">${nameRow}<span class="presence-activity">${escapeHtml(ACTIVITY[user.activity] || ACTIVITY.browse)}</span>${user.statusMessage ? `<small>“${escapeHtml(user.statusMessage)}”</small>` : ''}</div>`;
+      const avatarUrl = normalizeAvatarUrl(user.avatar);
+      const inner = `<div class="presence-avatar-wrap"><img class="presence-avatar" src="${escapeHtml(avatarUrl)}" alt=""><span class="presence-dot"></span></div><div class="presence-copy">${nameRow}<span class="presence-activity">${escapeHtml(ACTIVITY[user.activity] || ACTIVITY.browse)}</span>${user.statusMessage ? `<small>“${escapeHtml(user.statusMessage)}”</small>` : ''}</div>`;
       return user.account && user.username ? `<a class="presence-user ${user.away ? 'is-away' : ''}" href="/profile/?user=${encodeURIComponent(user.username)}">${inner}</a>` : `<div class="presence-user ${user.away ? 'is-away' : ''}">${inner}</div>`;
     }).join('');
   }
