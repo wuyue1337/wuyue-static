@@ -1,14 +1,15 @@
 'use strict';
 
+const STATIC_BASE = 'https://wuyue1337.github.io/wuyue-static';
 const websites = [
-  { id: 'acgbox', name: 'ACG盒子', description: '二次元网站导航', url: 'https://www.acgbox.link/', icon: '/site-icons/acgbox.png', fallback: 'ACG' },
-  { id: 'allcc', name: '樱之空导航', description: 'ACG资源导航', url: 'https://www.allcc.cc/', icon: '/site-icons/allcc.png', fallback: '樱' },
-  { id: 'acg123', name: '二刺螈导航', description: '动漫与二次元入口', url: 'https://www.acg123.co/', icon: '/site-icons/acg123.ico', fallback: '二' },
-  { id: 'lkssite', name: 'LKs网站推荐', description: '有趣网站合集', url: 'https://lkssite.vip/', icon: '/site-icons/lkssite.ico', fallback: 'LKs' },
-  { id: '2dfan', name: '2DFan', description: '视觉小说资料', url: 'https://2dfan.com/', icon: '/site-icons/2dfan.ico', fallback: '2D' },
-  { id: 'kungal', name: '鲲Galgame', description: 'Galgame 交流社区', url: 'https://www.kungal.com/', icon: '/site-icons/kungal.ico', fallback: '鲲' },
-  { id: 'vndb', name: 'vndb', description: '视觉小说数据库', url: 'https://vndb.org/', icon: '/site-icons/vndb.ico', fallback: 'VN' },
-  { id: 'cycani', name: '次元城动漫', description: '动漫与追番', url: 'https://www.cycani.org/', icon: '/site-icons/cycani.png', fallback: '次' }
+  { id: 'acgbox', name: 'ACG盒子', description: '二次元网站导航', url: 'https://www.acgbox.link/', icon: `${STATIC_BASE}/site-icons/acgbox.png`, fallback: 'ACG' },
+  { id: 'allcc', name: '樱之空导航', description: 'ACG资源导航', url: 'https://www.allcc.cc/', icon: `${STATIC_BASE}/site-icons/allcc.png`, fallback: '樱' },
+  { id: 'acg123', name: '二刺螈导航', description: '动漫与二次元入口', url: 'https://www.acg123.co/', icon: `${STATIC_BASE}/site-icons/acg123.ico`, fallback: '二' },
+  { id: 'lkssite', name: 'LKs网站推荐', description: '有趣网站合集', url: 'https://lkssite.vip/', icon: `${STATIC_BASE}/site-icons/lkssite.ico`, fallback: 'LKs' },
+  { id: '2dfan', name: '2DFan', description: '视觉小说资料', url: 'https://2dfan.com/', icon: `${STATIC_BASE}/site-icons/2dfan.ico`, fallback: '2D' },
+  { id: 'kungal', name: '鲲Galgame', description: 'Galgame 交流社区', url: 'https://www.kungal.com/', icon: `${STATIC_BASE}/site-icons/kungal.ico`, fallback: '鲲' },
+  { id: 'vndb', name: 'vndb', description: '视觉小说数据库', url: 'https://vndb.org/', icon: `${STATIC_BASE}/site-icons/vndb.ico`, fallback: 'VN' },
+  { id: 'cycani', name: '次元城动漫', description: '动漫与追番', url: 'https://www.cycani.org/', icon: `${STATIC_BASE}/site-icons/cycani.png`, fallback: '次' }
 ];
 
 const intro = document.querySelector('.intro');
