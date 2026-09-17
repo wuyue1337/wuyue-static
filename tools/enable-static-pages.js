@@ -17,7 +17,13 @@ function walk(dir, out=[]) {
 }
 
 function toCdnUrl(raw, sourceFile) {
-  if (!raw || /^(?:https?:|data:|blob:|#|mailto:|tel:|javascript:|\/\/)/i.test(raw)) return raw;
+  if (!raw) return raw;
+
+  // Repair any old mistaken rewrite that sent Socket.IO to GitHub Pages.
+  const mistakenSocketPrefix = `${cdn}/socket.io/`;
+  if (raw.startsWith(mistakenSocketPrefix)) return raw.slice(cdn.length);
+
+  if (/^(?:https?:|data:|blob:|#|mailto:|tel:|javascript:|\/\/)/i.test(raw)) return raw;
   if (!staticExt.test(raw)) return raw;
   if (/^\/(?:api|socket\.io)\//i.test(raw)) return raw;
 
@@ -56,6 +62,10 @@ for (const file of walk(root)) {
     // Only rewrite literal root-relative static assets in JS. API, navigation and Socket.IO stay on the site origin.
     text = text.replace(/(['"])(\/(?!api\/|socket\.io\/)[^'"\r\n]+\.(?:css|js|jpg|jpeg|png|webp|gif|svg|ico|woff2?|ttf|otf|mp3|wav|ogg|webm|mp4)(?:[?#][^'"\r\n]*)?)\1/gi,
       (all, quote, value) => `${quote}${toCdnUrl(value, file)}${quote}`);
+
+    // Also repair previously rewritten absolute Socket.IO URLs in JS literals.
+    text = text.replace(new RegExp(`(['"])${cdn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/socket\\.io/[^'"\\r\\n]+)\\1`, 'gi'),
+      (all, quote, socketPath) => `${quote}${socketPath}${quote}`);
   }
 
   if (text !== before) {

@@ -17,6 +17,8 @@
   }
 })();
 
+const DEFAULT_AVATAR_URL = 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg';
+
 let scoreAuthPromise = null;
 function loadScoreAuth() {
   if (window.WuyueScoreAuth) return Promise.resolve(window.WuyueScoreAuth);
@@ -57,6 +59,11 @@ function profileHref(entry) {
   return entry.username ? `/profile/?user=${encodeURIComponent(entry.username)}` : null;
 }
 
+function normalizeAvatarUrl(value) {
+  if (!value || value === 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg') return DEFAULT_AVATAR_URL;
+  return value;
+}
+
 function appendIdentityBadges(info, entry) {
   const role = entry.memberNo === 1 || entry.role === 'owner' ? 'owner' : entry.role === 'admin' ? 'staff' : '';
   if (role) {
@@ -83,10 +90,10 @@ function createPerson(entry) {
   if (href) { avatarLink.href = href; avatarLink.title = `查看 ${entry.name} 的个人主页`; }
   const avatar = document.createElement('img');
   avatar.className = 'leaderboard-avatar';
-  avatar.src = entry.avatar || 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg';
+  avatar.src = normalizeAvatarUrl(entry.avatar);
   avatar.alt = `${entry.name}的头像`;
   avatar.loading = 'lazy';
-  avatar.addEventListener('error', () => { avatar.src = 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg'; }, { once: true });
+  avatar.addEventListener('error', () => { avatar.src = DEFAULT_AVATAR_URL; }, { once: true });
   avatarLink.appendChild(avatar);
 
   const info = document.createElement('span');
