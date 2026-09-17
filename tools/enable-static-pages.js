@@ -46,6 +46,11 @@ function toCdnUrl(raw, sourceFile) {
   return cdn + sitePath + suffix;
 }
 
+function isComparisonLiteral(source, offset) {
+  const prefix = source.slice(Math.max(0, offset - 24), offset);
+  return /(?:===|!==|==|!=)\s*$/.test(prefix);
+}
+
 let changedFiles = 0;
 for (const file of walk(root)) {
   let text = fs.readFileSync(file, 'utf8');
@@ -59,9 +64,13 @@ for (const file of walk(root)) {
   }
 
   if (/\.js$/i.test(file)) {
-    // Only rewrite literal root-relative static assets in JS. API, navigation and Socket.IO stay on the site origin.
+    // Rewrite root-relative static asset literals, but do not mutate literals used only for comparisons.
+    // This keeps checks such as value === '/default-avatar.jpg' semantically correct.
     text = text.replace(/(['"])(\/(?!api\/|socket\.io\/)[^'"\r\n]+\.(?:css|js|jpg|jpeg|png|webp|gif|svg|ico|woff2?|ttf|otf|mp3|wav|ogg|webm|mp4)(?:[?#][^'"\r\n]*)?)\1/gi,
-      (all, quote, value) => `${quote}${toCdnUrl(value, file)}${quote}`);
+      (all, quote, value, offset, source) => {
+        if (isComparisonLiteral(source, offset)) return all;
+        return `${quote}${toCdnUrl(value, file)}${quote}`;
+      });
 
     // Also repair previously rewritten absolute Socket.IO URLs in JS literals.
     text = text.replace(new RegExp(`(['"])${cdn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/socket\\.io/[^'"\\r\\n]+)\\1`, 'gi'),

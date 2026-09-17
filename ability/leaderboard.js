@@ -60,7 +60,7 @@ function profileHref(entry) {
 }
 
 function normalizeAvatarUrl(value) {
-  if (!value || value === 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg') return DEFAULT_AVATAR_URL;
+  if (!value || value === '/default-avatar.jpg') return DEFAULT_AVATAR_URL;
   return value;
 }
 
