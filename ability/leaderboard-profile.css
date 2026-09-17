@@ -1,0 +1,10 @@
+.leaderboard-list li{grid-template-columns:42px minmax(0,1fr) auto;min-height:72px}
+.leaderboard-person{display:flex!important;align-items:center;flex-wrap:nowrap!important;gap:11px!important;min-width:0}
+.leaderboard-avatar-link{display:block;flex:0 0 42px;width:42px;height:42px;border-radius:50%;overflow:hidden;border:1px solid #ffffff28;background:#272b43;transition:transform .15s,border-color .15s}
+a.leaderboard-avatar-link:hover{transform:scale(1.06);border-color:#c8b9ff99}
+.leaderboard-avatar{display:block;width:100%;height:100%;object-fit:cover}
+.leaderboard-person-info{display:flex;align-items:center;flex-wrap:wrap;gap:5px 8px;min-width:0;flex:1}
+.leaderboard-person-info .leaderboard-name{max-width:100%}
+a.leaderboard-name:hover{color:#d9c9ff;text-decoration:underline;text-underline-offset:3px}
+.leaderboard-person-info .leaderboard-details{flex-basis:100%}
+@media(max-width:650px){.leaderboard-list li{grid-template-columns:30px minmax(0,1fr) auto}.leaderboard-avatar-link{flex-basis:36px;width:36px;height:36px}.leaderboard-person{gap:8px!important}.leaderboard-person-info .member-no{display:none}}

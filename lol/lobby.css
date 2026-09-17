@@ -1,0 +1,251 @@
+/* 猜英雄大厅增强：保留原深蓝 + 金色风格 */
+#screen-home {
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 0;
+}
+
+.lobby-page {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0 64px;
+}
+
+.lobby-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr);
+  gap: 28px;
+  align-items: center;
+  margin-bottom: 34px;
+}
+
+.lobby-hero .brand {
+  text-align: left;
+  padding: 26px 12px 26px 4px;
+}
+
+.lobby-hero .brand-glyph {
+  margin: 0 0 18px;
+}
+
+.lobby-hero .brand h1 {
+  font-size: clamp(34px, 5vw, 54px);
+  margin-bottom: 10px;
+}
+
+.lobby-hero .brand-sub {
+  font-size: 16px;
+  max-width: 600px;
+}
+
+.lobby-create-card {
+  box-shadow: 0 20px 60px rgba(0,0,0,.22);
+}
+
+.lobby-account-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(10,20,40,.55);
+}
+
+.lobby-account-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(200,170,110,.45);
+  background: var(--bg-soft);
+  flex-shrink: 0;
+}
+
+.lobby-account-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lobby-account-kicker {
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.lobby-account-copy strong {
+  color: var(--text);
+  font-size: 16px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.lobby-account-copy small {
+  color: var(--teal);
+  font-size: 12px;
+}
+
+.lobby-section {
+  background: rgba(16, 26, 51, .72);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.lobby-section-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.lobby-section-head h2 {
+  margin: 0;
+  color: var(--gold-bright);
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+}
+
+.lobby-room-count {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.lobby-refresh {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.lobby-refresh:hover {
+  color: var(--gold-bright);
+  border-color: var(--gold);
+}
+
+.public-room-list {
+  display: grid;
+  gap: 10px;
+}
+
+.public-room-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(30,35,40,.95), rgba(20,31,52,.92));
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+
+.public-room-card:not(.is-disabled):hover {
+  transform: translateY(-1px);
+  border-color: rgba(200,170,110,.6);
+  box-shadow: 0 10px 28px rgba(0,0,0,.18);
+}
+
+.public-room-card.is-disabled {
+  opacity: .62;
+}
+
+.public-room-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.public-room-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+
+.public-room-title-row strong {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.public-room-status {
+  flex-shrink: 0;
+  font-size: 11px;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: rgba(10,200,185,.12);
+  color: var(--teal);
+  border: 1px solid rgba(10,200,185,.25);
+}
+
+.public-room-status.playing,
+.public-room-status.ended {
+  background: rgba(140,151,168,.1);
+  border-color: rgba(140,151,168,.2);
+  color: var(--text-dim);
+}
+
+.public-room-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.btn-room-disabled {
+  background: rgba(140,151,168,.08);
+  border: 1px solid rgba(140,151,168,.18);
+  color: var(--text-dim);
+  cursor: not-allowed;
+}
+
+.lobby-empty {
+  padding: 34px 18px;
+  text-align: center;
+  color: var(--text-dim);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+
+.lobby-footnote {
+  margin-top: 16px;
+}
+
+@media (max-width: 760px) {
+  .lobby-page {
+    width: min(100% - 24px, 620px);
+    padding: 24px 0 44px;
+  }
+
+  .lobby-hero {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .lobby-hero .brand {
+    text-align: center;
+    padding: 10px 4px 0;
+  }
+
+  .lobby-hero .brand-glyph {
+    margin: 0 auto 14px;
+  }
+
+  .public-room-card {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .public-room-card .btn {
+    width: 100%;
+  }
+}

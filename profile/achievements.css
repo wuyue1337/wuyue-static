@@ -1,0 +1,23 @@
+.achievement-grid{display:grid;grid-template-columns:1fr;gap:22px}
+.achievement-category{min-width:0}
+.achievement-category-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:11px;padding-bottom:10px;border-bottom:1px solid #8f7cff55}
+.achievement-category-head h3{margin:0;color:#eeeaff;font-size:14px;letter-spacing:.4px}
+.achievement-category-head span{color:#9189b8;font-size:11px;font-variant-numeric:tabular-nums}
+.achievement-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.achievement{position:relative;display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;align-items:center;min-height:94px;padding:13px 15px;border:1px solid #8274bd4a;border-radius:14px;background:linear-gradient(135deg,#1a1e34e8,#14182be8);overflow:hidden;transition:border-color .18s,box-shadow .18s,transform .18s,opacity .18s,filter .18s}
+.achievement::after{content:'';position:absolute;right:-34px;bottom:-45px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#8f79ff1c,transparent 68%);pointer-events:none}
+.achievement-badge{position:relative;z-index:1;display:grid;place-items:center;width:58px;height:64px;clip-path:polygon(50% 0,93% 24%,93% 76%,50% 100%,7% 76%,7% 24%);background:linear-gradient(145deg,#7560df,#4e3c9b);color:#fff;font-size:14px;font-weight:900;letter-spacing:-.3px;text-align:center;text-shadow:0 1px 8px #1c124d;box-shadow:0 0 22px #866fff4a}
+.achievement-copy{position:relative;z-index:1;min-width:0}
+.achievement-copy strong{display:block;color:#f0edff;font-size:14px;line-height:1.35;overflow-wrap:anywhere}
+.achievement-copy small{display:block;margin-top:4px;color:#9da5c1;font-size:11px;line-height:1.45}
+.achievement-copy em{display:inline-block;margin-top:7px;color:#b9adff;font-size:9px;font-style:normal;font-weight:800;letter-spacing:.5px}
+.achievement.unlocked{border-color:#9a85ed80;box-shadow:inset 0 0 0 1px #b4a1ff0d,0 8px 24px #0a0c1d38}
+.achievement.unlocked:hover{transform:translateY(-2px);border-color:#b09cffaa;box-shadow:0 10px 28px #7360d31f}
+.achievement.unlocked .achievement-badge{background:linear-gradient(145deg,#9278ff,#5f44ba);box-shadow:0 0 0 2px #cfc4ff38 inset,0 0 24px #8d72ff5e}
+.achievement.locked{border-color:#5f63733d;background:linear-gradient(135deg,#181b28d6,#151821d6);opacity:.58;filter:saturate(.2)}
+.achievement.locked::after{background:radial-gradient(circle,#8890a20c,transparent 68%)}
+.achievement.locked .achievement-badge{background:linear-gradient(145deg,#626672,#444853);color:#b8bbc4;text-shadow:none;box-shadow:0 0 0 2px #d4d6df12 inset}
+.achievement.locked .achievement-copy strong{color:#aeb2bd}
+.achievement.locked .achievement-copy small{color:#7f8492}
+.achievement.locked .achievement-copy em{color:#777d8d}
+@media(max-width:760px){.achievement-list{grid-template-columns:1fr}.achievement{grid-template-columns:58px minmax(0,1fr);gap:12px}.achievement-badge{width:52px;height:58px;font-size:13px}}
