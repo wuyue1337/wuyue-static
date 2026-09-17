@@ -55,7 +55,7 @@ function show(view) {
 }
 function drawProfile(user) {
   $('profile-avatar').src = user.avatar;
-  $('reset-avatar').hidden = user.avatar === '/default-avatar.jpg';
+  $('reset-avatar').hidden = user.avatar === 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg';
   $('profile-nickname').textContent = user.nickname;
   $('profile-member-no').textContent = `No.${user.memberNo}`;
   $('profile-member-no').classList.toggle('founder', user.memberNo <= 10);

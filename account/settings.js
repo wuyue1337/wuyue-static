@@ -47,7 +47,7 @@
   }
 
   function drawProfile(user) {
-    $('profile-avatar').src = user.avatar || '/default-avatar.jpg';
+    $('profile-avatar').src = user.avatar || 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg';
     $('profile-nickname').textContent = user.nickname;
     $('profile-username').textContent = `@${user.username}`;
     $('profile-member-no').textContent = user.memberNo ? `No.${user.memberNo}` : '';
@@ -59,7 +59,7 @@
     const profileHref = `/profile/?user=${encodeURIComponent(user.username)}`;
     $('public-profile-link').href = profileHref;
     $('top-profile-link').href = profileHref;
-    $('reset-avatar').hidden = user.avatar === '/default-avatar.jpg';
+    $('reset-avatar').hidden = user.avatar === 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg';
   }
 
   async function loadSocial() {

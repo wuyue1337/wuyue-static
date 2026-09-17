@@ -56,7 +56,7 @@ async function loadActivity() {
       const row = document.createElement('a');
       row.className = 'community-activity-item';
       row.href = item.url || `/profile/?user=${encodeURIComponent(item.user.username)}`;
-      const img = document.createElement('img'); img.src = item.user.avatar || '/default-avatar.jpg'; img.alt = ''; img.loading = 'lazy';
+      const img = document.createElement('img'); img.src = item.user.avatar || 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg'; img.alt = ''; img.loading = 'lazy';
       const copy = document.createElement('div'); copy.className = 'community-activity-copy';
       const strong = document.createElement('strong'); strong.textContent = item.user.nickname;
       const text = document.createElement('span'); text.textContent = item.text;

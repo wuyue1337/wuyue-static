@@ -43,9 +43,9 @@ async function load() {
       row.className = `item${item.read ? '' : ' unread'}`;
       if (item.url) row.href = item.url;
       const img = document.createElement('img');
-      img.src = item.from?.avatar || '/default-avatar.jpg';
+      img.src = item.from?.avatar || 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg';
       img.alt = '';
-      img.addEventListener('error', () => { img.src = '/default-avatar.jpg'; }, { once: true });
+      img.addEventListener('error', () => { img.src = 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg'; }, { once: true });
       const copy = document.createElement('div');
       copy.className = 'copy';
       const strong = document.createElement('strong');

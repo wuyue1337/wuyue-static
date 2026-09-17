@@ -3,7 +3,7 @@
 (() => {
   if (!document.querySelector('script[data-wuyue-presence-loader]')) {
     const script = document.createElement('script');
-    script.src = '/presence.js';
+    script.src = 'https://wuyue1337.github.io/wuyue-static/presence.js';
     script.defer = true;
     script.dataset.wuyuePresenceLoader = '1';
     document.head.appendChild(script);
@@ -11,7 +11,7 @@
   if (!document.querySelector('link[data-wuyue-leaderboard-style]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = '/leaderboard-unified.css?v=1';
+    link.href = 'https://wuyue1337.github.io/wuyue-static/leaderboard-unified.css?v=1';
     link.dataset.wuyueLeaderboardStyle = '1';
     document.head.appendChild(link);
   }
@@ -29,7 +29,7 @@ function loadScoreAuth() {
       return;
     }
     const script = document.createElement('script');
-    script.src = '/ability/score-auth.js';
+    script.src = 'https://wuyue1337.github.io/wuyue-static/ability/score-auth.js';
     script.dataset.scoreAuthLoader = '1';
     script.onload = () => resolve(window.WuyueScoreAuth);
     script.onerror = () => reject(new Error('账号组件加载失败，请刷新页面重试'));
@@ -83,10 +83,10 @@ function createPerson(entry) {
   if (href) { avatarLink.href = href; avatarLink.title = `查看 ${entry.name} 的个人主页`; }
   const avatar = document.createElement('img');
   avatar.className = 'leaderboard-avatar';
-  avatar.src = entry.avatar || '/default-avatar.jpg';
+  avatar.src = entry.avatar || 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg';
   avatar.alt = `${entry.name}的头像`;
   avatar.loading = 'lazy';
-  avatar.addEventListener('error', () => { avatar.src = '/default-avatar.jpg'; }, { once: true });
+  avatar.addEventListener('error', () => { avatar.src = 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg'; }, { once: true });
   avatarLink.appendChild(avatar);
 
   const info = document.createElement('span');

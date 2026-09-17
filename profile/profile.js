@@ -103,7 +103,7 @@
       selectedImage = '';
       fileInput.value = '';
       saveButton.disabled = true;
-      preview.src = user.avatar || '/default-avatar.jpg';
+      preview.src = user.avatar || 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg';
       setEditorStatus('');
       if (dialog.showModal) dialog.showModal(); else dialog.setAttribute('open', '');
       try { await ensureAuth(); }
@@ -130,11 +130,11 @@
       selectedImage = '';
       saveButton.disabled = true;
       setEditorStatus('');
-      if (!file) { preview.src = user.avatar || '/default-avatar.jpg'; return; }
+      if (!file) { preview.src = user.avatar || 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg'; return; }
       if (!['image/png', 'image/jpeg'].includes(file.type) || file.size > 1024 * 1024) {
         setEditorStatus('请选择 1 MB 以内的 PNG 或 JPEG 图片。');
         fileInput.value = '';
-        preview.src = user.avatar || '/default-avatar.jpg';
+        preview.src = user.avatar || 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg';
         return;
       }
       try {
@@ -185,7 +185,7 @@
         const response = await fetch('/api/auth/avatar', { method: 'DELETE', headers: { 'x-csrf-token': currentAuth.csrf } });
         const result = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(result.error || '操作失败');
-        user.avatar = result.avatar || '/default-avatar.jpg';
+        user.avatar = result.avatar || 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg';
         profileAvatar.src = user.avatar;
         preview.src = user.avatar;
         selectedImage = '';

@@ -3,7 +3,7 @@
 
   if (!document.querySelector('script[data-wuyue-presence-loader]')) {
     const presenceScript = document.createElement('script');
-    presenceScript.src = '/presence.js';
+    presenceScript.src = 'https://wuyue1337.github.io/wuyue-static/presence.js';
     presenceScript.defer = true;
     presenceScript.dataset.wuyuePresenceLoader = '1';
     document.head.appendChild(presenceScript);
@@ -60,7 +60,7 @@
       const identity = document.createElement('div');
       identity.className = 'lobby-account-identity';
       identity.innerHTML = `
-        <img class="lobby-account-avatar" src="${escapeHtml(user.avatar || '/default-avatar.jpg')}" alt="">
+        <img class="lobby-account-avatar" src="${escapeHtml(user.avatar || 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg')}" alt="">
         <div class="lobby-account-copy">
           <span class="lobby-account-kicker">当前账号</span>
           <strong>${escapeHtml(user.nickname || user.username || '召唤师')}</strong>

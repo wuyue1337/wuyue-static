@@ -24,7 +24,7 @@
     return `<span class="member-no${number <= 100 ? ' founder' : ''}">No.${number}</span>`;
   }
   function avatar(src, name) {
-    return `<img src="${escapeHtml(src || '/default-avatar.jpg')}" alt="${escapeHtml(name || '')}" onerror="this.src='/default-avatar.jpg'">`;
+    return `<img src="${escapeHtml(src || 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg')}" alt="${escapeHtml(name || '')}" onerror="this.src='https://wuyue1337.github.io/wuyue-static/default-avatar.jpg'">`;
   }
   function session() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch { return null; }

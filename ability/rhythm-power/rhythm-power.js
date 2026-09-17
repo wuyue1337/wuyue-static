@@ -260,7 +260,7 @@
       if (!data.entries?.length) boardList.innerHTML = '<li class="board-empty">还没有成绩，来拿第一个名次吧。</li>';
       else for (const entry of data.entries.slice(0, 20)) {
         const li = document.createElement('li'), rank = document.createElement('span'); rank.className = 'board-rank'; rank.textContent = `#${entry.rank}`;
-        const avatar = document.createElement('img'); avatar.className = 'board-avatar'; avatar.src = entry.avatar || '/default-avatar.jpg'; avatar.alt = '';
+        const avatar = document.createElement('img'); avatar.className = 'board-avatar'; avatar.src = entry.avatar || 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg'; avatar.alt = '';
         const user = document.createElement('div'); user.className = 'board-user';
         const name = document.createElement(entry.username ? 'a' : 'strong'); if (entry.username) name.href = `/profile/?user=${encodeURIComponent(entry.username)}`; name.textContent = entry.name || '未命名'; user.appendChild(name);
         const role = entry.memberNo === 1 || entry.role === 'owner' ? 'owner' : entry.role === 'admin' ? 'staff' : '';

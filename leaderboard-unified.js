@@ -4,7 +4,7 @@
   if (!document.querySelector('link[data-wuyue-leaderboard-style]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = '/leaderboard-unified.css?v=1';
+    link.href = 'https://wuyue1337.github.io/wuyue-static/leaderboard-unified.css?v=1';
     link.dataset.wuyueLeaderboardStyle = '1';
     document.head.appendChild(link);
   }
@@ -52,10 +52,10 @@
     }
     const avatar = document.createElement('img');
     avatar.className = 'leaderboard-avatar';
-    avatar.src = entry?.avatar || '/default-avatar.jpg';
+    avatar.src = entry?.avatar || 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg';
     avatar.alt = `${entry?.name || entry?.nickname || '玩家'}的头像`;
     avatar.loading = 'lazy';
-    avatar.addEventListener('error', () => { avatar.src = '/default-avatar.jpg'; }, { once: true });
+    avatar.addEventListener('error', () => { avatar.src = 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg'; }, { once: true });
     avatarLink.appendChild(avatar);
 
     const info = document.createElement('span');
