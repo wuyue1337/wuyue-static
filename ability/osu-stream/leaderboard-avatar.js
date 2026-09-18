@@ -46,6 +46,8 @@
   }
 
   function renderUnrankedState() {
+    const overview = list.previousElementSibling;
+    if (overview?.classList.contains('wuyue-board-overview')) overview.hidden = true;
     list.replaceChildren();
     const item = document.createElement('li');
     item.className = 'board-empty';
@@ -67,7 +69,7 @@
         return;
       }
       const script = document.createElement('script');
-      script.src = 'https://wuyue1337.github.io/wuyue-static/ability/leaderboard.js?v=20260918-2';
+      script.src = 'https://wuyue1337.github.io/wuyue-static/ability/leaderboard.js?v=20260919-1';
       script.defer = true;
       script.dataset.wuyueSharedLeaderboard = '1';
       script.onload = resolve;
@@ -91,6 +93,8 @@
     }
     try {
       const board = await getBoard();
+      const overview = list.previousElementSibling;
+      if (overview?.classList.contains('wuyue-board-overview')) overview.hidden = false;
       await board.load({ duration: currentDuration }, page);
     } catch (error) {
       console.warn('统一 osu 排行榜加载失败', error);

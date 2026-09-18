@@ -224,7 +224,10 @@ scoreForm.addEventListener('submit', async event => {
   const button = scoreForm.querySelector('button'); button.disabled = true;
   try {
     const response = await leaderboard.submit(scoreName.value.trim(), resultScore, undefined, proof);
-    scoreStatus.textContent = response.improved ? `提交成功！当前排名第 ${response.rank} 名。` : `已保留此前更好的成绩（第 ${response.rank} 名）。`;
+    const personal = response.viewer?.personal;
+    scoreStatus.textContent = response.improved
+      ? personal?.total > 1 ? `个人最好纪录已更新 · 超过 ${personal.percentile}% 的上榜玩家。` : '个人最好纪录已更新。'
+      : '已保留此前更好的个人纪录。';
     proof = null; button.textContent = '已提交';
   } catch (error) { scoreStatus.textContent = error.message; button.disabled = false; }
   finally { submitting = false; }

@@ -256,7 +256,7 @@
     if (!modeDefs[selectedMode].ranked || !lastResultStats?.elapsedMs) return; submitScoreButton.disabled = true; submitStatus.textContent = '提交中…';
     try {
       const response = await fetch('/api/leaderboard/rhythm-power', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ duration: selectedDuration, keys: selectedKeyCount, score, elapsedMs: lastResultStats.elapsedMs }) });
-      const data = await response.json(); if (!response.ok) throw new Error(data.error || '提交失败'); submitStatus.textContent = data.improved === false ? `未超过已有最佳 · 当前 #${data.rank || '—'}` : `提交成功 · 当前 #${data.rank || '—'}`; await loadLeaderboard();
+      const data = await response.json(); if (!response.ok) throw new Error(data.error || '提交失败'); const personal = data.viewer?.personal; submitStatus.textContent = data.improved === false ? '未超过已有个人最好纪录' : personal?.total > 1 ? `个人最好纪录已更新 · 超过 ${personal.percentile}% 的上榜玩家` : '个人最好纪录已更新'; await loadLeaderboard();
     } catch (error) { submitStatus.textContent = error.message; submitScoreButton.disabled = false; }
   }
 

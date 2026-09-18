@@ -22,7 +22,7 @@
         return;
       }
       const script = document.createElement('script');
-      script.src = 'https://wuyue1337.github.io/wuyue-static/ability/leaderboard.js?v=20260918-2';
+      script.src = 'https://wuyue1337.github.io/wuyue-static/ability/leaderboard.js?v=20260919-1';
       script.defer = true;
       script.dataset.wuyueSharedLeaderboard = '1';
       script.onload = resolve;
@@ -36,7 +36,7 @@
       const create = window.WuyueLeaderboard?.create || window.createLeaderboard;
       return create('rhythm-power', list, status, {
         bindPagination: false,
-        emptyText: '还没有成绩，来拿第一个名次吧。',
+        emptyText: '还没有成绩，来留下第一份纪录吧。',
         emptyMeta: '共 0 位上榜'
       });
     });

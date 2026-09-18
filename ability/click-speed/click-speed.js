@@ -152,7 +152,10 @@ submitForm.addEventListener('submit', async event => {
   try {
     const result = await leaderboard.submit(submitName.value.trim(), count, duration);
     if (currentRun !== run) return;
-    submitStatus.textContent = result.improved ? `提交成功！当前排名第 ${result.rank} 名。` : `已保留你之前更好的成绩（第 ${result.rank} 名）。`;
+    const personal = result.viewer?.personal;
+    submitStatus.textContent = result.improved
+      ? personal?.total > 1 ? `个人最好纪录已更新 · 超过 ${personal.percentile}% 的上榜玩家。` : '个人最好纪录已更新。'
+      : '已保留你之前更好的个人纪录。';
     submitButton.textContent = '已提交';
   } catch (error) {
     if (currentRun !== run) return;

@@ -11,7 +11,7 @@
   if (!document.querySelector('link[data-wuyue-leaderboard-style]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = 'https://wuyue1337.github.io/wuyue-static/leaderboard-unified.css?v=1';
+    link.href = 'https://wuyue1337.github.io/wuyue-static/leaderboard-unified.css?v=2';
     link.dataset.wuyueLeaderboardStyle = '1';
     document.head.appendChild(link);
   }
@@ -129,6 +129,27 @@ function scoreParts(mode, entry, context, options) {
   return [entry.score, '次'];
 }
 
+function personalScoreParts(mode, entry, context, options) {
+  if (typeof options.personalScore === 'function') return options.personalScore(entry, context);
+  if (mode === 'click-speed' && Number(context.duration) > 0) {
+    return [(entry.score / Number(context.duration)).toFixed(2), 'CPS'];
+  }
+  if (mode === 'rhythm-power') {
+    const elapsed = Number(entry.elapsedMs) || Number(context.duration) * 1000;
+    const avg = Number(entry.avgSpeed) || (elapsed > 0 ? entry.score / (elapsed / 1000) : 0);
+    return [avg.toFixed(2), '/s'];
+  }
+  return scoreParts(mode, entry, context, options);
+}
+
+function personalStandingText(personal) {
+  if (!personal || !Number.isFinite(personal.percentile)) return '';
+  if (Number(personal.total) <= 1) return '当前只有你一位上榜玩家';
+  const value = Number(personal.percentile);
+  const text = Number.isInteger(value) ? String(value) : value.toFixed(1);
+  return `超过 ${text}% 的上榜玩家`;
+}
+
 function normalizeContext(mode, value) {
   if (value && typeof value === 'object') return { ...value };
   if (value == null) return {};
@@ -206,13 +227,56 @@ window.createLeaderboard = function createLeaderboard(mode, list, meta, options 
   const pageLabel = options.pageLabel || section?.querySelector('.board-page, #board-page') || null;
   list.classList.add('wuyue-unified-board');
 
+  const overview = document.createElement('div');
+  overview.className = 'wuyue-board-overview';
+
+  const personalCard = document.createElement('div');
+  personalCard.className = 'wuyue-personal-best';
+  const personalLabel = document.createElement('span');
+  personalLabel.className = 'wuyue-personal-label';
+  personalLabel.textContent = '你的个人最佳';
+  const personalValue = document.createElement('strong');
+  personalValue.className = 'wuyue-personal-value';
+  const personalDetail = document.createElement('span');
+  personalDetail.className = 'wuyue-personal-detail';
+  const personalRank = document.createElement('small');
+  personalRank.className = 'wuyue-personal-rank';
+  personalCard.append(personalLabel, personalValue, personalDetail, personalRank);
+
+  const entertainmentNote = document.createElement('div');
+  entertainmentNote.className = 'wuyue-entertainment-note';
+  entertainmentNote.innerHTML = '<strong>娱乐排行榜</strong><span>仅供交流展示，不进行严格反作弊验证，也不提供站内权益。</span>';
+
+  overview.append(personalCard, entertainmentNote);
+  list.before(overview);
+
+  function renderPersonal(data) {
+    const viewer = data?.viewer || {};
+    const personal = viewer.personal || null;
+    if (viewer.authenticated && personal) {
+      const [value, unit] = personalScoreParts(mode, personal, currentContext, options);
+      personalValue.textContent = `${value}${unit ? ` ${unit}` : ''}`;
+      personalDetail.textContent = personalStandingText(personal);
+      personalRank.textContent = `娱乐榜 #${personal.rank} / ${personal.total}`;
+      personalCard.classList.add('has-score');
+      return;
+    }
+    personalCard.classList.remove('has-score');
+    personalValue.textContent = viewer.authenticated ? '暂无成绩' : '登录后查看';
+    personalDetail.textContent = viewer.authenticated
+      ? '完成并提交一次测试后，这里会显示个人最佳与百分位。'
+      : '登录并提交成绩后，这里会显示个人最佳与百分位。';
+    personalRank.textContent = '';
+  }
+
   function render(data) {
     currentPage = data.page || 1;
+    renderPersonal(data);
     list.replaceChildren();
     if (!data.entries?.length) {
       const empty = document.createElement('li');
       empty.className = 'board-empty';
-      empty.textContent = options.emptyText || '还没有成绩，来拿下第一名吧。';
+      empty.textContent = options.emptyText || '还没有成绩，来留下第一份纪录吧。';
       list.appendChild(empty);
     }
     for (const entry of data.entries || []) {
