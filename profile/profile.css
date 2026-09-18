@@ -148,3 +148,10 @@ a.profile-activity-item:hover{
     grid-column:2;
   }
 }
+
+/* Ability records: personal best first, entertainment rank secondary */
+.score{padding-right:15px}
+.score-standing{display:block;margin-top:7px;color:#b9adff;font-size:11px;font-weight:800;line-height:1.4}
+.score-rank{position:static;display:inline-flex;align-items:center;width:max-content;max-width:100%;margin-top:9px;padding:4px 7px;transform:none;border:1px solid #6f678e66;border-radius:999px;background:#26283d;color:#8991ac;font-size:9px;font-style:normal;font-weight:800;letter-spacing:0;text-shadow:none;white-space:nowrap}
+.score-variant-side b{color:#858da8;font-size:9px;font-style:normal;font-weight:800;white-space:nowrap}
+@media(max-width:650px){.score{padding-right:15px}.score-popover{margin:11px 0 -4px 0}}

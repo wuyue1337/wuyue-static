@@ -199,12 +199,20 @@
   const scores = document.getElementById('scores');
   const ranks = data.scores.ranks || {};
 
-  function rankClass(rank) {
-    if (rank === 1) return 'rank-1';
-    if (rank === 2) return 'rank-2';
-    if (rank === 3) return 'rank-3';
-    if (rank && rank <= 10) return 'rank-top10';
-    return '';
+  function percentileLabel(variant) {
+    const total = Number(variant?.total) || 0;
+    const percentile = Number(variant?.percentile);
+    if (!Number.isFinite(percentile) || total < 1) return '';
+    if (total === 1) return '当前唯一上榜纪录';
+    const value = Number.isInteger(percentile) ? String(percentile) : percentile.toFixed(1);
+    return `超过 ${value}% 的上榜玩家`;
+  }
+
+  function entertainmentRankLabel(variant) {
+    const rank = Number(variant?.rank) || 0;
+    const total = Number(variant?.total) || 0;
+    if (!rank) return '';
+    return total > 0 ? `娱乐榜 #${rank} / ${total}` : `娱乐榜 #${rank}`;
   }
 
   function clickVariants() {
@@ -284,10 +292,12 @@
     row.className = `score-variant${variant.id === currentId ? ' selected' : ''}`;
     const copy = document.createElement('div');
     const label = document.createElement('strong'); label.textContent = variant.label;
-    const detail = document.createElement('small'); detail.textContent = `${variant.value}${variant.sub ? ` · ${variant.sub}` : ''}`;
+    const detail = document.createElement('small');
+    const percentile = percentileLabel(variant);
+    detail.textContent = `${variant.value}${variant.sub ? ` · ${variant.sub}` : ''}${percentile ? ` · ${percentile}` : ''}`;
     copy.append(label, detail);
     const side = document.createElement('div'); side.className = 'score-variant-side';
-    if (variant.rank) { const rank = document.createElement('b'); rank.textContent = `#${variant.rank}`; side.append(rank); }
+    if (variant.rank) { const rank = document.createElement('b'); rank.textContent = entertainmentRankLabel(variant); side.append(rank); }
     if (data.isSelf) {
       const button = document.createElement('button');
       button.type = 'button';
@@ -304,18 +314,29 @@
     if (!main) return;
     const rank = Number(main.rank) || null;
     const card = document.createElement('div');
-    card.className = `score score-group ${rankClass(rank)}`.trim();
+    card.className = 'score score-group';
     if (variants.length > 1) { card.tabIndex = 0; card.setAttribute('aria-label', `${title}，悬停或聚焦查看全部记录`); }
     const span = document.createElement('span'); span.textContent = title;
     const strong = document.createElement('strong'); strong.textContent = main.value;
     const meta = document.createElement('small'); meta.className = 'score-main-meta'; meta.textContent = `${main.label}${main.sub ? ` · ${main.sub}` : ''}`;
     card.append(span, strong, meta);
+    const percentile = percentileLabel(main);
+    if (percentile) {
+      const standing = document.createElement('small');
+      standing.className = 'score-standing';
+      standing.textContent = percentile;
+      card.append(standing);
+    }
     if (rank) {
-      const badge = document.createElement('b'); badge.className = 'score-rank'; badge.textContent = `#${rank}`; badge.title = `当前排行榜第 ${rank} 名`; card.append(badge);
+      const badge = document.createElement('b');
+      badge.className = 'score-rank';
+      badge.textContent = entertainmentRankLabel(main);
+      badge.title = '能力测试排行榜仅供娱乐展示';
+      card.append(badge);
     }
     if (variants.length > 1) {
       const popover = document.createElement('div'); popover.className = 'score-popover';
-      const head = document.createElement('div'); head.className = 'score-popover-head'; head.innerHTML = `<strong>全部记录</strong><small>${data.isSelf ? '可选择主页主显示' : '各模式 / 时长排名'}</small>`;
+      const head = document.createElement('div'); head.className = 'score-popover-head'; head.innerHTML = `<strong>全部记录</strong><small>${data.isSelf ? '可选择主页主显示' : '各模式 / 时长的个人纪录'}</small>`;
       const list = document.createElement('div'); list.className = 'score-variant-list';
       for (const variant of variants) list.append(createVariantRow(test, variant, main.id));
       popover.append(head, list); card.append(popover);
@@ -335,7 +356,7 @@
         const main = test ? chooseVariant(test, variants) : variants[0];
         addScoreCard({ test, title: card.title || card.id || '能力测试', main, variants });
       }
-      if (!scores.children.length) scores.innerHTML = '<p class="empty">还没有排行榜成绩。</p>';
+      if (!scores.children.length) scores.innerHTML = '<p class="empty">还没有能力测试纪录。</p>';
       return;
     }
 
@@ -352,7 +373,7 @@
     if (data.scores.dodge) {
       addScoreCard({ title: '走位训练', main: { id: 'dodge', label: '最佳生存', value: `${(data.scores.dodge / 1000).toFixed(1)} 秒`, sub: '', rank: ranks.dodge } }); count++;
     }
-    if (!count) scores.innerHTML = '<p class="empty">还没有排行榜成绩。</p>';
+    if (!count) scores.innerHTML = '<p class="empty">还没有能力测试纪录。</p>';
   }
 
   function renderGameRecords() {
