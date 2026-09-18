@@ -383,7 +383,32 @@
     const connections = Array.isArray(data.profileData?.connections) ? data.profileData.connections : [];
     host.replaceChildren();
     if (!connections.length) {
-      card.hidden = true;
+      if (!data.isSelf) {
+        card.hidden = true;
+        return;
+      }
+      card.hidden = false;
+      const empty = document.createElement('div');
+      empty.className = 'profile-link-prompt';
+
+      const icon = document.createElement('span');
+      icon.className = 'profile-link-prompt-icon';
+      icon.textContent = 'osu!';
+
+      const copy = document.createElement('div');
+      const title = document.createElement('strong');
+      title.textContent = '绑定你的 osu! 账号';
+      const detail = document.createElement('span');
+      detail.textContent = '通过 osu! 官方授权验证身份，并在个人主页展示 PP、排名等公开资料。';
+      copy.append(title, detail);
+
+      const action = document.createElement('a');
+      action.className = 'profile-link-prompt-action';
+      action.href = '/api/integrations/osu/start';
+      action.textContent = '绑定 osu!';
+
+      empty.append(icon, copy, action);
+      host.append(empty);
       return;
     }
     card.hidden = false;
@@ -464,7 +489,18 @@
       host.append(item);
     }
 
-    if (!host.children.length) card.hidden = true;
+    if (!host.children.length) {
+      card.hidden = !data.isSelf;
+      return;
+    }
+
+    if (data.isSelf) {
+      const manage = document.createElement('a');
+      manage.className = 'profile-linked-manage';
+      manage.href = '/account/settings.html';
+      manage.textContent = '管理关联账号 →';
+      host.append(manage);
+    }
   }
 
   function renderGameRecords() {
