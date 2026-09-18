@@ -1,7 +1,8 @@
 (() => {
   'use strict';
 
-  const STORAGE_KEY = 'rhythmPowerDisplayV9';
+  const STORAGE_KEY = 'rhythmPowerDisplayV10';
+  const V9_KEY = 'rhythmPowerDisplayV9';
   const V8_KEY = 'rhythmPowerDisplayV8';
   const V7_KEY = 'rhythmPowerDisplayV7';
   const V6_KEY = 'rhythmPowerDisplayV6';
@@ -11,28 +12,39 @@
   const V2_KEY = 'rhythmPowerDisplayV2';
   const LEGACY_KEY = 'rhythmPowerDisplayV1';
 
-  const ALT_COLOR = '#69c9ef';
-  const COLOR_PRESETS = ['#9d88eb', '#69c9ef', '#f3a7dc', '#f0d66a', '#78d6a3', '#ef8295', '#f2f2f6'];
+  const WHITE_COLOR = '#f2f2f6';
+  const BLUE_COLOR = '#69c9ef';
+  const YELLOW_COLOR = '#f0d66a';
+  const COLOR_PRESETS = ['#9d88eb', BLUE_COLOR, '#f3a7dc', YELLOW_COLOR, '#78d6a3', '#ef8295', WHITE_COLOR];
 
   function makeDefaultLaneOverrides() {
     return {
+      4: { 1: BLUE_COLOR, 2: BLUE_COLOR },
+      5: { 1: BLUE_COLOR, 2: YELLOW_COLOR, 3: BLUE_COLOR },
+      6: { 1: BLUE_COLOR, 4: BLUE_COLOR },
+      7: { 1: BLUE_COLOR, 3: YELLOW_COLOR, 5: BLUE_COLOR }
+    };
+  }
+
+  function makeV9DefaultLaneOverrides() {
+    return {
       4: {},
-      5: { 1: ALT_COLOR, 3: ALT_COLOR },
-      6: { 1: ALT_COLOR, 4: ALT_COLOR },
-      7: { 1: ALT_COLOR, 3: ALT_COLOR, 5: ALT_COLOR }
+      5: { 1: BLUE_COLOR, 3: BLUE_COLOR },
+      6: { 1: BLUE_COLOR, 4: BLUE_COLOR },
+      7: { 1: BLUE_COLOR, 3: BLUE_COLOR, 5: BLUE_COLOR }
     };
   }
 
   const skinDefaults = {
-    default: { noteHeight: 50, noteWidth: 90, color: '#9d88eb', shape: 'soft', laneOverrides: makeDefaultLaneOverrides() },
-    ball: { noteHeight: 100, noteWidth: 100, color: '#9d88eb', laneOverrides: makeDefaultLaneOverrides() }
+    default: { noteHeight: 50, noteWidth: 100, color: WHITE_COLOR, shape: 'soft', laneOverrides: makeDefaultLaneOverrides() },
+    ball: { noteHeight: 100, noteWidth: 100, color: WHITE_COLOR, laneOverrides: makeDefaultLaneOverrides() }
   };
 
   const defaults = {
-    trackWidth: 680,
+    trackWidth: 600,
     scrollSpeed: 1,
-    guides: true,
-    noteEffects: true,
+    guides: false,
+    noteEffects: false,
     noteSkin: 'default',
     skins: {
       default: cloneSkinDefault('default'),
@@ -202,7 +214,7 @@
     if (!noteColorInput) {
       const colorLabel = document.createElement('div');
       colorLabel.className = 'display-color';
-      colorLabel.innerHTML = '<span>当前皮肤 Note 主色</span><div class="display-color-row"><input id="note-color" type="color" value="#9d88eb"><output id="note-color-value">#9D88EB</output></div><div class="note-color-presets" id="note-color-presets" aria-label="预设颜色"></div>';
+      colorLabel.innerHTML = '<span>当前皮肤 Note 主色</span><div class="display-color-row"><input id="note-color" type="color" value="#f2f2f6"><output id="note-color-value">#F2F2F6</output></div><div class="note-color-presets" id="note-color-presets" aria-label="预设颜色"></div>';
       displayOptions.insertBefore(colorLabel, guideToggle || resetButton);
       noteColorInput = colorLabel.querySelector('#note-color');
       noteColorValue = colorLabel.querySelector('#note-color-value');
@@ -226,7 +238,7 @@
       const effectsLabel = document.createElement('label');
       effectsLabel.className = 'display-toggle';
       effectsLabel.htmlFor = 'note-effects';
-      effectsLabel.innerHTML = '<span>Note 特效</span><input id="note-effects" type="checkbox" checked><output id="note-effects-value" for="note-effects">开启</output>';
+      effectsLabel.innerHTML = '<span>Note 特效</span><input id="note-effects" type="checkbox"><output id="note-effects-value" for="note-effects">关闭</output>';
       displayOptions.insertBefore(effectsLabel, guideToggle || resetButton);
       noteEffectsInput = effectsLabel.querySelector('#note-effects');
       noteEffectsValue = effectsLabel.querySelector('#note-effects-value');
@@ -303,8 +315,8 @@
     return {
       trackWidth: clamp(source?.trackWidth, limits.trackWidth.min, limits.trackWidth.max, defaults.trackWidth),
       scrollSpeed: snapScrollSpeed(source?.scrollSpeed),
-      guides: source?.guides !== false,
-      noteEffects: source?.noteEffects !== false,
+      guides: typeof source?.guides === 'boolean' ? source.guides : defaults.guides,
+      noteEffects: typeof source?.noteEffects === 'boolean' ? source.noteEffects : defaults.noteEffects,
       noteSkin: normalizeSkin(source?.noteSkin),
       skins: {
         default: cleanSkin(source?.skins?.default, skinDefaults.default, 'default'),
@@ -314,6 +326,38 @@
   }
 
   function freshDefaults() { return clean(defaults); }
+
+  function laneOverridesMatch(source, expected, count) {
+    const actual = cloneLaneOverrides(source)[count];
+    const target = cloneLaneOverrides(expected)[count];
+    return JSON.stringify(actual) === JSON.stringify(target);
+  }
+
+  function migrateV9(source) {
+    const migrated = clean(source);
+    const previousLaneDefaults = makeV9DefaultLaneOverrides();
+    const nextLaneDefaults = makeDefaultLaneOverrides();
+
+    if (Number(source?.trackWidth) === 680) migrated.trackWidth = defaults.trackWidth;
+    if (source?.guides === true) migrated.guides = defaults.guides;
+    if (source?.noteEffects === true) migrated.noteEffects = defaults.noteEffects;
+
+    for (const skinName of ['default', 'ball']) {
+      const sourceSkin = source?.skins?.[skinName] || {};
+      const targetSkin = migrated.skins[skinName];
+
+      if (skinName === 'default' && Number(sourceSkin.noteWidth) === 90) targetSkin.noteWidth = skinDefaults.default.noteWidth;
+      if (String(sourceSkin.color || '').toLowerCase() === '#9d88eb') targetSkin.color = skinDefaults[skinName].color;
+
+      for (const count of [4, 5, 6, 7]) {
+        if (laneOverridesMatch(sourceSkin.laneOverrides, previousLaneDefaults, count)) {
+          targetSkin.laneOverrides[count] = cloneLaneOverrides(nextLaneDefaults)[count];
+        }
+      }
+    }
+
+    return clean(migrated);
+  }
 
   function migrateV8(source) {
     return clean({
@@ -360,6 +404,9 @@
     try {
       const current = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
       if (current && typeof current === 'object') return clean(current);
+
+      const v9 = JSON.parse(localStorage.getItem(V9_KEY) || 'null');
+      if (v9 && typeof v9 === 'object') return migrateV9(v9);
 
       const v8 = JSON.parse(localStorage.getItem(V8_KEY) || 'null');
       if (v8 && typeof v8 === 'object') return migrateV8(v8);
