@@ -66,7 +66,7 @@ if (gameList && !gameList.querySelector('[href="/undercover/"]')) {
   const card = document.createElement('a');
   card.className = 'game';
   card.href = '/undercover/';
-  card.innerHTML = '<span class="cover cover-title">谁是卧底</span><strong>谁是卧底</strong><p>谁是卧底 + 白板 + 迷雾身份 + 随机禁词。</p><span class="play">进入游戏 ↗</span>';
+  card.innerHTML = '<span class="cover cover-title">谁是卧底</span><strong>谁是卧底</strong><p>谁是卧底 + 白板 + 迷雾身份 + 随机禁词。</p><span class="game-status-note">玩法改进中，可能会遇到 Bug</span><span class="play">进入游戏 ↗</span>';
   gameList.append(card);
 }
 
