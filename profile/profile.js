@@ -79,6 +79,115 @@
   document.getElementById('followers').textContent = data.followers;
   document.getElementById('following').textContent = data.following;
 
+  const PROFILE_ACTIVITY_TEXT = {
+    browse: '正在逛霧月乐园',
+    lol_lobby: '正在找 LOL 猜英雄房间',
+    lol_play: '正在玩 LOL 猜英雄',
+    guess_lobby: '正在找猜词房间',
+    guess_play: '正在玩 霧月猜词',
+    undercover: '正在玩谁是卧底',
+    dodge: '正在玩闪避',
+    reaction: '正在测试反应速度',
+    click: '正在测试点击速度',
+    osu_stream: '正在测试 osu! Stream 手速',
+    rhythm_power: '正在测试音游底力',
+    away: '暂时离开'
+  };
+  const presenceState = {
+    online: data.presence?.online === true,
+    away: data.presence?.away === true,
+    activity: data.presence?.activity || null,
+    lastSeen: Number(data.presence?.lastSeen) || null,
+    totalBaseMs: Math.max(0, Number(data.presence?.totalActiveMs) || 0),
+    activeSince: data.presence?.online === true && data.presence?.away !== true ? Date.now() : null
+  };
+
+  function formatPresenceDuration(ms) {
+    const minutes = Math.floor(Math.max(0, Number(ms) || 0) / 60000);
+    if (minutes < 1) return '< 1 分钟';
+    const days = Math.floor(minutes / 1440);
+    const hours = Math.floor((minutes % 1440) / 60);
+    const mins = minutes % 60;
+    if (days > 0) return `${days} 天 ${hours} 小时`;
+    if (hours > 0) return mins ? `${hours} 小时 ${mins} 分钟` : `${hours} 小时`;
+    return `${mins} 分钟`;
+  }
+
+  function relativePresenceTime(value) {
+    const time = Number(value);
+    if (!time) return '暂无记录';
+    const diff = Math.max(0, Date.now() - time);
+    if (diff < 60 * 1000) return '刚刚';
+    if (diff < 60 * 60 * 1000) return `${Math.floor(diff / 60000)} 分钟前`;
+    if (diff < 24 * 60 * 60 * 1000) return `${Math.floor(diff / 3600000)} 小时前`;
+    if (diff < 7 * 24 * 60 * 60 * 1000) return `${Math.floor(diff / 86400000)} 天前`;
+    return new Date(time).toLocaleDateString('zh-CN');
+  }
+
+  function currentPresenceTotal() {
+    return presenceState.totalBaseMs + (presenceState.activeSince ? Math.max(0, Date.now() - presenceState.activeSince) : 0);
+  }
+
+  function renderProfilePresence() {
+    const dot = document.getElementById('profile-presence-dot');
+    const state = document.getElementById('profile-online-state');
+    const activity = document.getElementById('profile-current-activity');
+    const lastSeen = document.getElementById('profile-last-seen');
+    const total = document.getElementById('profile-total-time');
+    if (!dot || !state || !activity || !lastSeen || !total) return;
+
+    dot.className = `profile-presence-dot ${presenceState.online ? (presenceState.away ? 'away' : 'online') : 'offline'}`;
+    if (presenceState.online && !presenceState.away) {
+      state.textContent = '在线';
+      activity.textContent = PROFILE_ACTIVITY_TEXT[presenceState.activity] || '正在逛霧月乐园';
+      lastSeen.textContent = '当前在线';
+      lastSeen.removeAttribute('title');
+    } else if (presenceState.online && presenceState.away) {
+      state.textContent = '暂时离开';
+      activity.textContent = '活跃时长已暂停累计';
+      lastSeen.textContent = `${relativePresenceTime(presenceState.lastSeen)}活跃`;
+      if (presenceState.lastSeen) lastSeen.title = new Date(presenceState.lastSeen).toLocaleString('zh-CN');
+    } else {
+      state.textContent = '离线';
+      activity.textContent = '';
+      lastSeen.textContent = relativePresenceTime(presenceState.lastSeen);
+      if (presenceState.lastSeen) lastSeen.title = new Date(presenceState.lastSeen).toLocaleString('zh-CN');
+    }
+    total.textContent = formatPresenceDuration(currentPresenceTotal());
+  }
+
+  function syncProfilePresenceFromList(users) {
+    const list = Array.isArray(users) ? users : [];
+    const target = list.find(item => item?.account && typeof item.username === 'string' && item.username.toLowerCase() === user.username.toLowerCase()) || null;
+    const now = Date.now();
+    const wasOnline = presenceState.online;
+    const wasActive = wasOnline && !presenceState.away;
+    const nextOnline = Boolean(target);
+    const nextAway = Boolean(target?.away);
+    const nextActive = nextOnline && !nextAway;
+
+    if (wasActive && !nextActive && presenceState.activeSince) {
+      presenceState.totalBaseMs += Math.max(0, now - presenceState.activeSince);
+      presenceState.activeSince = null;
+    } else if (!wasActive && nextActive) {
+      presenceState.activeSince = now;
+    }
+
+    if ((wasOnline && !nextOnline) || (wasActive && nextAway)) presenceState.lastSeen = now;
+    if (nextActive) presenceState.lastSeen = now;
+
+    presenceState.online = nextOnline;
+    presenceState.away = nextAway;
+    presenceState.activity = target?.activity || null;
+    renderProfilePresence();
+  }
+
+  window.addEventListener('wuyue:presence-list', event => {
+    syncProfilePresenceFromList(event.detail?.users);
+  });
+  renderProfilePresence();
+  setInterval(renderProfilePresence, 30000);
+
   const settingsButton = document.getElementById('settings-button');
   const followButton = document.getElementById('follow-button');
   settingsButton.hidden = !data.isSelf;
@@ -635,74 +744,184 @@
     if (!data.isSelf || !profileMain || !profileStatusNode) return;
     const sections = [...document.querySelectorAll('[data-profile-section]')];
     let dragging = null;
+    let placeholder = null;
     let startOrder = null;
-    let pointerId = null;
+    let activePointerId = null;
+    let grabOffsetY = 0;
+    let lastPointerY = 0;
+    let autoScrollFrame = 0;
 
-    const finishDrag = () => {
-      if (!dragging) return;
-      const changedSection = dragging;
-      dragging = null;
-      changedSection.classList.remove('profile-dragging');
-      document.body.classList.remove('profile-sorting');
-      pointerId = null;
-      const nextOrder = currentProfileSectionOrder();
-      if (startOrder && nextOrder.join('|') !== startOrder.join('|')) saveProfileSectionOrder(nextOrder, startOrder);
-      startOrder = null;
+    const visibleSections = () => [...document.querySelectorAll('[data-profile-section]')]
+      .filter(section => section !== dragging && !section.hidden && section.parentElement === profileMain);
+
+    const stopAutoScroll = () => {
+      if (autoScrollFrame) cancelAnimationFrame(autoScrollFrame);
+      autoScrollFrame = 0;
     };
 
-    const moveToPointer = clientY => {
+    const tickAutoScroll = () => {
+      if (!dragging) {
+        autoScrollFrame = 0;
+        return;
+      }
+      const edge = 90;
+      let delta = 0;
+      if (lastPointerY < edge) delta = -Math.ceil((edge - lastPointerY) / 7);
+      else if (lastPointerY > innerHeight - edge) delta = Math.ceil((lastPointerY - (innerHeight - edge)) / 7);
+      delta = Math.max(-18, Math.min(18, delta));
+      if (delta) {
+        scrollBy(0, delta);
+        movePlaceholder(lastPointerY);
+      }
+      autoScrollFrame = requestAnimationFrame(tickAutoScroll);
+    };
+
+    const positionFloatingSection = clientY => {
       if (!dragging) return;
-      const siblings = [...document.querySelectorAll('[data-profile-section]')].filter(section => section !== dragging && !section.hidden);
-      let before = null;
-      let bestOffset = -Infinity;
-      for (const section of siblings) {
-        const box = section.getBoundingClientRect();
-        const offset = clientY - box.top - box.height / 2;
-        if (offset < 0 && offset > bestOffset) {
-          bestOffset = offset;
-          before = section;
+      dragging.style.top = `${Math.round(clientY - grabOffsetY)}px`;
+    };
+
+    function movePlaceholder(clientY) {
+      if (!dragging || !placeholder) return;
+      const candidates = visibleSections();
+      let target = null;
+      for (const section of candidates) {
+        const rect = section.getBoundingClientRect();
+        if (clientY < rect.top + rect.height / 2) {
+          target = section;
+          break;
         }
       }
-      if (before) profileMain.insertBefore(dragging, before);
-      else profileMain.insertBefore(dragging, profileStatusNode);
+      if (target) {
+        if (placeholder.nextElementSibling !== target) profileMain.insertBefore(placeholder, target);
+      } else if (placeholder.nextElementSibling !== profileStatusNode) {
+        profileMain.insertBefore(placeholder, profileStatusNode);
+      }
+    }
+
+    const cleanupPointerListeners = () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerCancel);
+      stopAutoScroll();
+    };
+
+    const restoreFloatingStyles = section => {
+      section.classList.remove('profile-dragging');
+      section.style.removeProperty('position');
+      section.style.removeProperty('left');
+      section.style.removeProperty('top');
+      section.style.removeProperty('width');
+      section.style.removeProperty('height');
+      section.style.removeProperty('margin');
+      section.style.removeProperty('z-index');
+    };
+
+    const finishDrag = cancelled => {
+      if (!dragging) return;
+      const section = dragging;
+      const previousOrder = startOrder ? [...startOrder] : currentProfileSectionOrder();
+
+      cleanupPointerListeners();
+      if (placeholder?.parentElement === profileMain) {
+        profileMain.insertBefore(section, placeholder);
+        placeholder.remove();
+      } else {
+        profileMain.insertBefore(section, profileStatusNode);
+      }
+      restoreFloatingStyles(section);
+      document.body.classList.remove('profile-sorting');
+
+      dragging = null;
+      placeholder = null;
+      activePointerId = null;
+      startOrder = null;
+
+      if (cancelled) {
+        applyProfileSectionOrder(previousOrder);
+        return;
+      }
+
+      const nextOrder = currentProfileSectionOrder();
+      if (nextOrder.join('|') !== previousOrder.join('|')) {
+        saveProfileSectionOrder(nextOrder, previousOrder);
+      }
+    };
+
+    function onPointerMove(event) {
+      if (!dragging || event.pointerId !== activePointerId) return;
+      event.preventDefault();
+      lastPointerY = event.clientY;
+      positionFloatingSection(event.clientY);
+      movePlaceholder(event.clientY);
+    }
+
+    function onPointerUp(event) {
+      if (!dragging || event.pointerId !== activePointerId) return;
+      event.preventDefault();
+      finishDrag(false);
+    }
+
+    function onPointerCancel(event) {
+      if (!dragging || event.pointerId !== activePointerId) return;
+      finishDrag(true);
+    }
+
+    const beginDrag = (section, event) => {
+      if (dragging) return;
+      const rect = section.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+
+      event.preventDefault();
+      activePointerId = event.pointerId;
+      startOrder = currentProfileSectionOrder();
+      lastPointerY = event.clientY;
+      grabOffsetY = Math.max(0, Math.min(rect.height, event.clientY - rect.top));
+
+      placeholder = document.createElement('div');
+      placeholder.className = 'profile-drag-placeholder';
+      placeholder.style.height = `${Math.round(rect.height)}px`;
+      section.before(placeholder);
+
+      dragging = section;
+      section.classList.add('profile-dragging');
+      section.style.position = 'fixed';
+      section.style.left = `${Math.round(rect.left)}px`;
+      section.style.top = `${Math.round(rect.top)}px`;
+      section.style.width = `${Math.round(rect.width)}px`;
+      section.style.height = `${Math.round(rect.height)}px`;
+      section.style.margin = '0';
+      section.style.zIndex = '1000';
+      document.body.append(section);
+      document.body.classList.add('profile-sorting');
+
+      window.addEventListener('pointermove', onPointerMove, { passive: false });
+      window.addEventListener('pointerup', onPointerUp, { passive: false });
+      window.addEventListener('pointercancel', onPointerCancel);
+      autoScrollFrame = requestAnimationFrame(tickAutoScroll);
     };
 
     for (const section of sections) {
       const head = section.querySelector('.section-head');
       if (!head || head.querySelector('.profile-sort-handle')) continue;
+
       const handle = document.createElement('button');
       handle.type = 'button';
       handle.className = 'profile-sort-handle';
-      handle.innerHTML = '<span aria-hidden="true">⋮⋮</span><small>拖动</small>';
+      handle.innerHTML = '<span aria-hidden="true">☰</span>';
       handle.title = '拖动调整板块顺序';
       handle.setAttribute('aria-label', '拖动调整这个板块的顺序');
-
       handle.addEventListener('pointerdown', event => {
-        if (event.button !== undefined && event.button !== 0) return;
-        event.preventDefault();
-        dragging = section;
-        startOrder = currentProfileSectionOrder();
-        pointerId = event.pointerId;
-        section.classList.add('profile-dragging');
-        document.body.classList.add('profile-sorting');
-        handle.setPointerCapture?.(event.pointerId);
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        beginDrag(section, event);
       });
-      handle.addEventListener('pointermove', event => {
-        if (dragging !== section || pointerId !== event.pointerId) return;
-        event.preventDefault();
-        moveToPointer(event.clientY);
-      });
-      handle.addEventListener('pointerup', event => {
-        if (dragging !== section || pointerId !== event.pointerId) return;
-        handle.releasePointerCapture?.(event.pointerId);
-        finishDrag();
-      });
-      handle.addEventListener('pointercancel', finishDrag);
+
       handle.addEventListener('keydown', event => {
         if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
         event.preventDefault();
         const previousOrder = currentProfileSectionOrder();
-        const visible = [...document.querySelectorAll('[data-profile-section]')].filter(item => !item.hidden);
+        const visible = [...document.querySelectorAll('[data-profile-section]')]
+          .filter(item => !item.hidden && item.parentElement === profileMain);
         const index = visible.indexOf(section);
         if (event.key === 'ArrowUp' && index > 0) {
           profileMain.insertBefore(section, visible[index - 1]);

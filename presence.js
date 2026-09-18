@@ -9,8 +9,9 @@
   const DEFAULT_AVATAR_URL = 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg';
   const ACTIVITY = {
     browse: '🏠 正在逛霧月乐园', lol_lobby: '⚔️ 正在找 LOL 猜英雄房间', lol_play: '🎮 正在玩 LOL 猜英雄',
-    guess_lobby: '🔎 正在找猜词房间', guess_play: '🎯 正在玩 霧月猜词', dodge: '✨ 正在玩闪避',
-    reaction: '⚡ 正在测试反应速度', click: '🖱️ 正在测试点击速度', osu_stream: '⌨️ 正在测试 osu! Stream 手速', away: '🌙 暂时离开'
+    guess_lobby: '🔎 正在找猜词房间', guess_play: '🎯 正在玩 霧月猜词', undercover: '🕵️ 正在玩谁是卧底', dodge: '✨ 正在玩闪避',
+    reaction: '⚡ 正在测试反应速度', click: '🖱️ 正在测试点击速度', osu_stream: '⌨️ 正在测试 osu! Stream 手速',
+    rhythm_power: '🎵 正在测试音游底力', away: '🌙 暂时离开'
   };
   let socket = null, currentActivity = 'browse', isAway = false, idleTimer = null, started = false, memoryVisitorId = null;
   let followed = new Set();
@@ -31,8 +32,10 @@
     const path = location.pathname.toLowerCase();
     if (path.startsWith('/lol')) { const room = document.getElementById('screen-room'); return room && !room.classList.contains('hidden') ? 'lol_play' : 'lol_lobby'; }
     if (path.startsWith('/guess')) { const room = document.getElementById('roomView'); return room && !room.classList.contains('hidden') ? 'guess_play' : 'guess_lobby'; }
+    if (path.startsWith('/undercover')) return 'undercover';
     if (path.startsWith('/dodge')) return 'dodge';
     if (path.startsWith('/ability/osu-stream')) return 'osu_stream';
+    if (path.startsWith('/ability/rhythm-power')) return 'rhythm_power';
     if (path.startsWith('/ability/reaction')) return 'reaction';
     if (path.startsWith('/ability/click-speed')) return 'click';
     return 'browse';
@@ -93,6 +96,7 @@
     }) : [];
     document.getElementById('presenceCount').textContent = sorted.length;
     document.getElementById('presenceHeadCount').textContent = `${sorted.length} 人`;
+    window.dispatchEvent(new CustomEvent('wuyue:presence-list', { detail: { users: sorted } }));
     if (!sorted.length) { list.innerHTML = '<div class="presence-empty">现在还没有其他人在线</div>'; return; }
     list.innerHTML = sorted.map(user => {
       const badge = roleBadge(user.role);
