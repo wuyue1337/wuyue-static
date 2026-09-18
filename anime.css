@@ -37,3 +37,22 @@ body .ability-card{background:linear-gradient(135deg,rgba(40,43,73,.88),rgba(28,
 body .profile-card,body .hot-comments-card{background:rgba(28,32,53,.86);border-color:#b9b1dc38;box-shadow:0 12px 30px #05071834;backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
 body .reply-form{background:rgba(35,38,60,.84);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 @media(max-width:650px){body{background-position:center,center,center,58% 18%;background-attachment:scroll,scroll,scroll,scroll}}
+
+
+/* Homepage game cover labels */
+.cover.cover-title{
+  padding:0 14px;
+  font-size:clamp(24px,2.35vw,31px);
+  line-height:1.12;
+  letter-spacing:2px;
+  text-align:center;
+  white-space:nowrap;
+}
+@media(max-width:650px){
+  .cover.cover-title{
+    padding:0 8px;
+    font-size:18px;
+    letter-spacing:.5px;
+    white-space:normal;
+  }
+}

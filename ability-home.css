@@ -20,3 +20,24 @@
 @media(max-width:1000px){.abilities{grid-template-columns:repeat(2,minmax(0,1fr))}.ability-card{padding:23px 25px}.ability-icon{width:66px;height:66px}.ability-copy strong{font-size:18px}.community-banner{width:340px;min-width:0}}
 @media(max-width:650px){.abilities{grid-template-columns:1fr;gap:11px}.ability-card{grid-column:auto;min-height:116px;padding:17px}.ability-icon{width:56px;height:56px}.ability-icon svg{width:30px;height:30px}.ability-copy strong{font-size:17px}.intro{display:block}.community-banner{position:static;width:100%;margin-top:16px;padding:9px 10px}.community-copy small{white-space:normal}.community-copy-btn{padding:7px 9px}}
 @media(prefers-reduced-motion:reduce){.ability-card,.community-copy-btn{transition:none}}
+
+
+/* osu!-inspired ability marks */
+.ability-icon-osu,
+.ability-icon-mania{
+  border-radius:17px;
+  overflow:hidden;
+}
+.ability-icon-osu .osu-mark{
+  width:49px;
+  height:49px;
+  filter:drop-shadow(0 0 9px rgba(255,190,224,.22));
+}
+.ability-icon-mania .mania-mark{
+  width:48px;
+  height:48px;
+  filter:drop-shadow(0 0 9px rgba(190,176,255,.22));
+}
+.ability-icon-osu .osu-mark text{
+  letter-spacing:-.7px;
+}

@@ -49,33 +49,51 @@ if (intro && !document.querySelector('.community-banner')) {
 }
 
 const gameList = document.querySelector('#games .games');
-const guessCard = gameList?.querySelector('[href="/guess/"]');
-if (guessCard) {
-  const title = guessCard.querySelector('strong');
-  if (title) title.textContent = '猜猜词';
+const gameCoverLabels = new Map([
+  ['/lol/', 'LOL猜英雄'],
+  ['/guess/', '猜猜词'],
+  ['/undercover/', '谁是卧底']
+]);
+for (const [href, label] of gameCoverLabels) {
+  const card = gameList?.querySelector(`[href="${href}"]`);
+  const cover = card?.querySelector('.cover');
+  if (cover) {
+    cover.textContent = label;
+    cover.classList.add('cover-title');
+  }
 }
 if (gameList && !gameList.querySelector('[href="/undercover/"]')) {
   const card = document.createElement('a');
   card.className = 'game';
   card.href = '/undercover/';
-  card.innerHTML = '<span class="cover">卧</span><strong>谁是卧底</strong><p>谁是卧底 + 白板 + 迷雾身份 + 随机禁词。</p><span class="play">进入游戏 ↗</span>';
+  card.innerHTML = '<span class="cover cover-title">谁是卧底</span><strong>谁是卧底</strong><p>谁是卧底 + 白板 + 迷雾身份 + 随机禁词。</p><span class="play">进入游戏 ↗</span>';
   gameList.append(card);
 }
 
+const osuHomeIcon = '<span class="ability-icon ability-icon-osu" aria-hidden="true"><svg class="osu-mark" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="25" fill="none" stroke="currentColor" stroke-width="3.5"/><circle cx="32" cy="32" r="20" fill="currentColor" opacity=".12"/><text x="32" y="38" text-anchor="middle" fill="currentColor" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="800" font-style="italic">osu!</text></svg></span>';
+const maniaHomeIcon = '<span class="ability-icon ability-icon-mania" aria-hidden="true"><svg class="mania-mark" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="25" fill="none" stroke="currentColor" stroke-width="3"/><g fill="currentColor" opacity=".92"><rect x="16" y="15" width="6" height="29" rx="2"/><rect x="25" y="15" width="6" height="29" rx="2"/><rect x="34" y="15" width="6" height="29" rx="2"/><rect x="43" y="15" width="6" height="29" rx="2"/></g><g fill="#1f2340"><rect x="16" y="35" width="6" height="9" rx="1.5"/><rect x="25" y="32" width="6" height="12" rx="1.5"/><rect x="34" y="35" width="6" height="9" rx="1.5"/><rect x="43" y="32" width="6" height="12" rx="1.5"/></g><path d="M15 48h34" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span>';
+
 const abilityList = document.querySelector('.abilities');
-if (abilityList && !abilityList.querySelector('[href="/ability/osu-stream/"]')) {
-  const card = document.createElement('a');
-  card.className = 'ability-card';
-  card.href = '/ability/osu-stream/';
-  card.innerHTML = '<span class="ability-icon" aria-hidden="true"><strong style="font-size:18px;letter-spacing:2px">ZX</strong></span><span class="ability-copy"><strong>osu! 手速测试</strong><small>双键连打，测试 Stream BPM 与稳定度</small><em>开始测试 ↗</em></span>';
-  abilityList.append(card);
+let osuCard = abilityList?.querySelector('[href="/ability/osu-stream/"]');
+if (abilityList && !osuCard) {
+  osuCard = document.createElement('a');
+  osuCard.className = 'ability-card';
+  osuCard.href = '/ability/osu-stream/';
+  osuCard.innerHTML = `${osuHomeIcon}<span class="ability-copy"><strong>osu! 手速测试</strong><small>双键连打，测试 Stream BPM 与稳定度</small><em>开始测试 ↗</em></span>`;
+  abilityList.append(osuCard);
+} else if (osuCard) {
+  osuCard.querySelector('.ability-icon')?.replaceWith(document.createRange().createContextualFragment(osuHomeIcon));
 }
-if (abilityList && !abilityList.querySelector('[href="/ability/rhythm-power/"]')) {
-  const card = document.createElement('a');
-  card.className = 'ability-card';
-  card.href = '/ability/rhythm-power/';
-  card.innerHTML = '<span class="ability-icon" aria-hidden="true">4K</span><span class="ability-copy"><strong>音游底力测试</strong><small>DFJK 渐进加压，测试键型处理与耐力</small><em>开始测试 ↗</em></span>';
-  abilityList.append(card);
+
+let maniaCard = abilityList?.querySelector('[href="/ability/rhythm-power/"]');
+if (abilityList && !maniaCard) {
+  maniaCard = document.createElement('a');
+  maniaCard.className = 'ability-card';
+  maniaCard.href = '/ability/rhythm-power/';
+  maniaCard.innerHTML = `${maniaHomeIcon}<span class="ability-copy"><strong>音游底力测试</strong><small>DFJK 渐进加压，测试键型处理与耐力</small><em>开始测试 ↗</em></span>`;
+  abilityList.append(maniaCard);
+} else if (maniaCard) {
+  maniaCard.querySelector('.ability-icon')?.replaceWith(document.createRange().createContextualFragment(maniaHomeIcon));
 }
 
 const list = document.getElementById('links');
