@@ -33,7 +33,6 @@
   const leaveSessionButton = $('leave-session');
   const keyBindRow = $('key-bind-row');
   const resetKeysButton = $('reset-keys');
-  const powerGlyph = document.querySelector('.power-glyph');
 
   const gameShell = $('game-shell');
   const tileBoard = $('tile-board');
@@ -125,7 +124,6 @@
       const head = document.createElement('span'); head.textContent = label; laneHead.appendChild(head);
       const pad = document.createElement('button'); pad.type = 'button'; pad.dataset.lane = String(lane); pad.textContent = label; keyPad.appendChild(pad);
     }
-    powerGlyph.textContent = selectedKeyCount === 4 ? 'SDL;' : `${selectedKeyCount}K`;
     resetKeysButton.title = `默认：${defaultKeysByCount[selectedKeyCount].map(labelForKey).join(' / ')}`;
   }
 
