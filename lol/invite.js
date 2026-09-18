@@ -6,7 +6,6 @@
   const nicknameInput = document.getElementById('nicknameInput');
   const roomCodeBadge = document.getElementById('roomCodeBadge');
   const roomHeader = document.querySelector('.room-header');
-  const lobbyPage = document.querySelector('.lobby-page');
   const roomScreen = document.getElementById('screen-room');
   const toast = document.getElementById('toast');
 
@@ -44,15 +43,6 @@
     const url = new URL('/lol/', location.origin);
     url.searchParams.set('room', code);
     return url.toString();
-  }
-
-  if (lobbyPage && !document.getElementById('lolBackHome')) {
-    const back = document.createElement('a');
-    back.id = 'lolBackHome';
-    back.className = 'lol-back-home';
-    back.href = '/';
-    back.textContent = '← 返回霧月乐园';
-    lobbyPage.prepend(back);
   }
 
   if (roomHeader && !document.getElementById('copyInviteLinkBtn')) {
