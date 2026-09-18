@@ -7,12 +7,12 @@
   const pageLabel = document.getElementById('board-page');
   const previousButton = document.getElementById('board-prev');
   const nextButton = document.getElementById('board-next');
+  const title = document.getElementById('osu-board-title');
   const submit = document.getElementById('submit-score');
   const submitStatus = document.getElementById('submit-status');
   if (!list || !meta || !tabs || !pageLabel) return;
 
-  let board = null;
-  let decorating = false;
+  let boardPromise = null;
 
   function activeDuration() {
     return Number(tabs.querySelector('button.active')?.dataset.duration || 10);
@@ -33,7 +33,7 @@
         return;
       }
       const script = document.createElement('script');
-      script.src = 'https://wuyue1337.github.io/wuyue-static/ability/leaderboard.js';
+      script.src = 'https://wuyue1337.github.io/wuyue-static/ability/leaderboard.js?v=20260918-2';
       script.defer = true;
       script.dataset.wuyueSharedLeaderboard = '1';
       script.onload = resolve;
@@ -42,40 +42,36 @@
     });
   }
 
-  async function decorate(force = false) {
-    if (decorating) return;
-    const rows = [...list.querySelectorAll('li:not(.board-empty)')];
-    if (!force && rows.length && rows.every(row => row.classList.contains('wuyue-standardized'))) return;
-    decorating = true;
+  function getBoard() {
+    if (!boardPromise) boardPromise = ensureSharedLeaderboard().then(() => {
+      const create = window.WuyueLeaderboard?.create || window.createLeaderboard;
+      return create('osu-stream', list, meta, { previousButton, nextButton, pageLabel });
+    });
+    return boardPromise;
+  }
+
+  async function refresh(page = 1) {
     try {
-      await ensureSharedLeaderboard();
-      if (!board) {
-        const create = window.WuyueLeaderboard?.create || window.createLeaderboard;
-        board = create('osu-stream', list, meta, {
-          previousButton,
-          nextButton,
-          pageLabel,
-          bindPagination: false
-        });
-      }
-      await board.load({ duration: activeDuration() }, currentPage());
+      const board = await getBoard();
+      await board.load({ duration: activeDuration() }, page);
     } catch (error) {
       console.warn('统一 osu 排行榜加载失败', error);
-    } finally {
-      decorating = false;
     }
   }
 
-  const observer = new MutationObserver(() => {
-    clearTimeout(observer.timer);
-    observer.timer = setTimeout(() => decorate(false), 30);
+  tabs.addEventListener('click', event => {
+    const button = event.target.closest('[data-duration]');
+    if (!button) return;
+    tabs.querySelectorAll('[data-duration]').forEach(item => item.classList.toggle('active', item === button));
+    if (title) title.textContent = `osu! Stream 排行榜 · ${activeDuration()} 秒`;
+    refresh(1);
   });
-  observer.observe(list, { childList: true, subtree: true });
-  tabs.addEventListener('click', () => setTimeout(() => decorate(true), 80));
-  previousButton?.addEventListener('click', () => setTimeout(() => decorate(true), 80));
-  nextButton?.addEventListener('click', () => setTimeout(() => decorate(true), 80));
-  submit?.addEventListener('click', () => setTimeout(() => decorate(true), 500));
-  setTimeout(() => decorate(true), 120);
+  window.addEventListener('wuyue:osu-leaderboard-refresh', event => {
+    const duration = Number(event.detail?.duration);
+    if (duration && duration !== activeDuration()) return;
+    refresh(Number(event.detail?.page) || currentPage());
+  });
+  refresh(1);
 
   let authLoader = null;
   let bypassAuth = false;

@@ -51,8 +51,6 @@
   const speedText = $('speed-text');
 
   const boardTitle = $('power-board-title');
-  const boardStatus = $('board-status');
-  const boardList = $('power-board-list');
 
   const dialog = $('result-dialog');
   const resultMode = $('result-mode');
@@ -250,30 +248,8 @@
     setTimeout(() => { if (typeof dialog.showModal === 'function') dialog.showModal(); else dialog.setAttribute('open', ''); }, reason === 'wrong' ? 170 : 40);
   }
 
-  function appendBoardBadge(user, text, className) { const badge = document.createElement('span'); badge.className = `board-user-badge ${className}`; badge.textContent = text; user.appendChild(badge); }
-
-  async function loadLeaderboard() {
-    boardStatus.textContent = '正在加载…'; boardList.innerHTML = '<li class="board-empty">正在加载排行榜…</li>';
-    try {
-      const response = await fetch(`/api/leaderboard/rhythm-power?duration=${selectedDuration}&keys=${selectedKeyCount}&page=1`, { credentials: 'same-origin' }), data = await response.json();
-      if (!response.ok) throw new Error(data.error || '加载失败'); boardList.innerHTML = '';
-      if (!data.entries?.length) boardList.innerHTML = '<li class="board-empty">还没有成绩，来拿第一个名次吧。</li>';
-      else for (const entry of data.entries.slice(0, 20)) {
-        const li = document.createElement('li'), rank = document.createElement('span'); rank.className = 'board-rank'; rank.textContent = `#${entry.rank}`;
-        const avatar = document.createElement('img'); avatar.className = 'board-avatar'; avatar.src = entry.avatar || 'https://wuyue1337.github.io/wuyue-static/default-avatar.jpg'; avatar.alt = '';
-        const user = document.createElement('div'); user.className = 'board-user';
-        const name = document.createElement(entry.username ? 'a' : 'strong'); if (entry.username) name.href = `/profile/?user=${encodeURIComponent(entry.username)}`; name.textContent = entry.name || '未命名'; user.appendChild(name);
-        const role = entry.memberNo === 1 || entry.role === 'owner' ? 'owner' : entry.role === 'admin' ? 'staff' : '';
-        if (role) appendBoardBadge(user, role === 'owner' ? 'OWNER' : 'STAFF', role);
-        if (entry.memberNo) appendBoardBadge(user, `No.${entry.memberNo}`, entry.memberNo <= 100 ? 'early' : 'member');
-        const resultDetail = document.createElement('small'); resultDetail.className = 'board-result-detail';
-        const elapsed = Number(entry.elapsedMs) || selectedDuration * 1000, avg = Number(entry.avgSpeed) || entry.score / (elapsed / 1000), bpm = Number(entry.bpm) || entry.score * 15000 / elapsed;
-        resultDetail.textContent = `${(elapsed / 1000).toFixed(2)}s · ${avg.toFixed(2)}/s · ${bpm.toFixed(1)} BPM`; user.appendChild(resultDetail);
-        const scoreBox = document.createElement('div'); scoreBox.className = 'board-score'; const scoreStrong = document.createElement('strong'); scoreStrong.textContent = String(entry.score); const scoreSmall = document.createElement('small'); scoreSmall.textContent = '次'; scoreBox.append(scoreStrong, scoreSmall);
-        li.append(rank, avatar, user, scoreBox); boardList.appendChild(li);
-      }
-      boardStatus.textContent = `共 ${data.total || 0} 条成绩`;
-    } catch (error) { boardList.innerHTML = '<li class="board-empty">排行榜暂时加载失败。</li>'; boardStatus.textContent = error.message; }
+  function loadLeaderboard() {
+    window.dispatchEvent(new CustomEvent('wuyue:rhythm-power-leaderboard-refresh'));
   }
 
   async function submitScore() {

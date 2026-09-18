@@ -3,7 +3,6 @@
 (() => {
   const modeButtons = [...document.querySelectorAll('[data-mode]')];
   const durationButtons = [...document.querySelectorAll('#duration-row [data-seconds]')];
-  const boardTabs = [...document.querySelectorAll('#board-tabs [data-duration]')];
   const key1Bind = document.getElementById('key1-bind');
   const key2Bind = document.getElementById('key2-bind');
   const visualKey1 = document.getElementById('visual-key1');
@@ -36,12 +35,6 @@
   const submitStatus = document.getElementById('submit-status');
   const resultClose = document.getElementById('result-close');
   const resultAgain = document.getElementById('result-again');
-  const boardList = document.getElementById('osu-board-list');
-  const boardMeta = document.getElementById('osu-board-meta');
-  const boardPage = document.getElementById('board-page');
-  const boardPrev = document.getElementById('board-prev');
-  const boardNext = document.getElementById('board-next');
-  const boardTitle = document.getElementById('osu-board-title');
 
   let mode = 'stream';
   let duration = 10;
@@ -60,9 +53,6 @@
   let chartTimer = null;
   let chartSamples = [];
   let latestResult = null;
-  let boardDuration = 10;
-  let boardCurrentPage = 1;
-  let boardTotalPages = 1;
 
   function codeLabel(code) {
     if (!code) return '?';
@@ -373,47 +363,6 @@
   resultClose.addEventListener('click', () => resultDialog.close());
   resultAgain.addEventListener('click', () => { resultDialog.close(); prepareRun(); });
 
-  async function loadBoard(page = 1) {
-    boardList.innerHTML = '<li class="board-empty">正在加载排行榜…</li>';
-    try {
-      const response = await fetch(`/api/leaderboard/osu-stream?duration=${boardDuration}&page=${page}`, { cache: 'no-store' });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || '排行榜加载失败');
-      boardCurrentPage = data.page;
-      boardTotalPages = data.totalPages;
-      boardPage.textContent = `第 ${data.page} / ${data.totalPages} 页`;
-      boardPrev.disabled = data.page <= 1;
-      boardNext.disabled = data.page >= data.totalPages;
-      boardMeta.textContent = data.total ? `共 ${data.total} 位上榜 · 每页 ${data.pageSize} 名` : '还没有成绩，来拿下第一名吧。';
-      boardList.replaceChildren();
-      if (!data.entries.length) {
-        const empty = document.createElement('li'); empty.className = 'board-empty'; empty.textContent = '还没有成绩，来拿下第一名吧。'; boardList.append(empty); return;
-      }
-      data.entries.forEach(entry => {
-        const li = document.createElement('li');
-        const rank = document.createElement('span'); rank.className = `leaderboard-rank${entry.rank <= 3 ? ' top-rank' : ''}`; rank.textContent = String(entry.rank).padStart(2,'0');
-        const person = document.createElement('span'); person.className = 'leaderboard-person';
-        const name = document.createElement('span'); name.className = 'leaderboard-name'; name.textContent = entry.name;
-        const details = document.createElement('span'); details.className = 'leaderboard-details'; details.textContent = entry.memberNo ? `No.${entry.memberNo} · ${new Date(entry.time).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false})}` : new Date(entry.time).toLocaleString('zh-CN');
-        person.append(name, details);
-        const score = document.createElement('strong'); score.className = 'osu-score'; score.innerHTML = `${(entry.score/100).toFixed(1)} BPM<small>UR ${entry.ur == null ? '—' : Number(entry.ur).toFixed(1)} · ${entry.taps || 0} taps</small>`;
-        li.append(rank, person, score);
-        boardList.append(li);
-      });
-    } catch (error) {
-      boardList.innerHTML = `<li class="board-empty">${error.message}</li>`;
-    }
-  }
-
-  boardTabs.forEach(button => button.addEventListener('click', () => {
-    boardDuration = Number(button.dataset.duration);
-    boardTabs.forEach(item => item.classList.toggle('active', item === button));
-    boardTitle.textContent = `osu! Stream 排行榜 · ${boardDuration} 秒`;
-    loadBoard(1);
-  }));
-  boardPrev.addEventListener('click', () => loadBoard(boardCurrentPage - 1));
-  boardNext.addEventListener('click', () => loadBoard(boardCurrentPage + 1));
-
   submitScore.addEventListener('click', async () => {
     if (!latestResult || !latestResult.completed || submitScore.disabled) return;
     submitScore.disabled = true;
@@ -432,7 +381,9 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || '提交失败');
       submitStatus.textContent = data.improved === false ? '成绩未刷新个人最好纪录' : '提交成功！';
-      if (boardDuration === latestResult.duration) loadBoard(data.page || 1);
+      window.dispatchEvent(new CustomEvent('wuyue:osu-leaderboard-refresh', {
+        detail: { duration: latestResult.duration, page: data.page || 1 }
+      }));
     } catch (error) {
       submitStatus.textContent = error.message;
       submitScore.disabled = false;
@@ -442,5 +393,4 @@
   window.addEventListener('resize', drawChart);
   syncKeys();
   resetStats();
-  loadBoard(1);
 })();

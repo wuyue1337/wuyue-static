@@ -1,7 +1,7 @@
 'use strict';
 
 (() => {
-  if (!document.querySelector('script[data-wuyue-presence-loader]')) {
+  if (!document.querySelector('script[data-wuyue-presence-loader], script[src*="/presence.js"]')) {
     const script = document.createElement('script');
     script.src = 'https://wuyue1337.github.io/wuyue-static/presence.js';
     script.defer = true;

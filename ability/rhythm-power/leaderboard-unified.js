@@ -5,11 +5,9 @@
   const status = document.getElementById('board-status');
   const keyRow = document.getElementById('key-count-row');
   const durationRow = document.getElementById('duration-row');
-  const submit = document.getElementById('submit-score');
   if (!list || !status || !keyRow || !durationRow) return;
 
-  let board = null;
-  let decorating = false;
+  let boardPromise = null;
 
   const selectedKeys = () => Number(keyRow.querySelector('[data-keys].active')?.dataset.keys || 4);
   const selectedDuration = () => Number(durationRow.querySelector('[data-duration].active')?.dataset.duration || 20);
@@ -24,7 +22,7 @@
         return;
       }
       const script = document.createElement('script');
-      script.src = 'https://wuyue1337.github.io/wuyue-static/ability/leaderboard.js';
+      script.src = 'https://wuyue1337.github.io/wuyue-static/ability/leaderboard.js?v=20260918-2';
       script.defer = true;
       script.dataset.wuyueSharedLeaderboard = '1';
       script.onload = resolve;
@@ -33,36 +31,27 @@
     });
   }
 
-  async function decorate(force = false) {
-    if (decorating) return;
-    const rows = [...list.querySelectorAll('li:not(.board-empty)')];
-    if (!force && rows.length && rows.every(row => row.classList.contains('wuyue-standardized'))) return;
-    decorating = true;
+  function getBoard() {
+    if (!boardPromise) boardPromise = ensureSharedLeaderboard().then(() => {
+      const create = window.WuyueLeaderboard?.create || window.createLeaderboard;
+      return create('rhythm-power', list, status, {
+        bindPagination: false,
+        emptyText: '还没有成绩，来拿第一个名次吧。',
+        emptyMeta: '共 0 位上榜'
+      });
+    });
+    return boardPromise;
+  }
+
+  async function refresh() {
     try {
-      await ensureSharedLeaderboard();
-      if (!board) {
-        const create = window.WuyueLeaderboard?.create || window.createLeaderboard;
-        board = create('rhythm-power', list, status, {
-          bindPagination: false,
-          emptyText: '还没有成绩，来拿第一个名次吧。',
-          emptyMeta: '共 0 位上榜'
-        });
-      }
+      const board = await getBoard();
       await board.load({ duration: selectedDuration(), keys: selectedKeys() }, 1);
     } catch (error) {
       console.warn('统一音游底力排行榜加载失败', error);
-    } finally {
-      decorating = false;
     }
   }
 
-  const observer = new MutationObserver(() => {
-    clearTimeout(observer.timer);
-    observer.timer = setTimeout(() => decorate(false), 30);
-  });
-  observer.observe(list, { childList: true, subtree: true });
-  keyRow.addEventListener('click', () => setTimeout(() => decorate(true), 80));
-  durationRow.addEventListener('click', () => setTimeout(() => decorate(true), 80));
-  submit?.addEventListener('click', () => setTimeout(() => decorate(true), 500));
-  setTimeout(() => decorate(true), 120);
+  window.addEventListener('wuyue:rhythm-power-leaderboard-refresh', refresh);
+  refresh();
 })();
