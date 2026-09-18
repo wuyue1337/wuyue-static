@@ -5,7 +5,7 @@
   const socket = io('/undercover');
   const STORAGE_KEY = 'wuyue_undercover_session';
   const NICK_KEY = 'wuyue_undercover_nick';
-  const state = { account:null, rooms:[], leaderboard:[], room:null, private:null, playerId:null };
+  const state = { account:null, rooms:[], careerStats:null, room:null, private:null, playerId:null };
   let joinPending = false;
 
   function escapeHtml(value) {
@@ -48,11 +48,11 @@
     } catch { state.account = null; }
     const host = $('#accountIdentity');
     if (state.account) {
-      host.innerHTML = `${avatar(state.account.avatar,state.account.nickname)}<div><strong>${escapeHtml(state.account.nickname)} ${memberNoHtml(state.account.memberNo)}</strong><small>@${escapeHtml(state.account.username)} · 登录账号会记录长期积分</small></div>`;
+      host.innerHTML = `${avatar(state.account.avatar,state.account.nickname)}<div><strong>${escapeHtml(state.account.nickname)} ${memberNoHtml(state.account.memberNo)}</strong><small>@${escapeHtml(state.account.username)} · 登录账号会记录长期战绩</small></div>`;
       $('#guestNickWrap').classList.add('hidden');
       $('#roomName').placeholder = `${state.account.nickname}的房间`;
     } else {
-      host.innerHTML = '<div><strong>游客模式</strong><small>可以完整游玩，但不会进入长期积分榜。</small></div>';
+      host.innerHTML = '<div><strong>游客模式</strong><small>可以完整游玩，但不会记录长期战绩。</small></div>';
       $('#guestNickWrap').classList.remove('hidden');
       $('#nickname').value = localStorage.getItem(NICK_KEY) || '';
     }
@@ -65,10 +65,21 @@
     box.querySelectorAll('.room-join').forEach(button => button.addEventListener('click', () => joinRoom(button.dataset.code)));
   }
 
-  function renderLeaderboard() {
-    const box = $('#leaderboard');
-    if (!state.leaderboard.length) { box.innerHTML = '<div class="empty">还没有积分记录，来拿下第一局。</div>'; return; }
-    box.innerHTML = state.leaderboard.slice(0,10).map(row => `<a class="leader-row" ${row.username?`href="/profile/?user=${encodeURIComponent(row.username)}"`:''}><span class="leader-rank">${row.rank}</span>${avatar(row.avatar,row.nickname)}<span class="leader-copy"><strong>${escapeHtml(row.nickname)} ${memberNoHtml(row.memberNo)}</strong><small>${row.wins} 胜 / ${row.games} 局</small></span><span class="leader-score">${row.score} pt</span></a>`).join('');
+  function renderCareerStats(value = state.careerStats) {
+    const box = $('#careerStats');
+    if (!box) return;
+    if (!value?.authenticated) {
+      box.innerHTML = '<div class="career-login-note"><strong>登录后记录长期战绩</strong><span>游客可以正常游玩，但不会累计对局与胜场。</span><a href="/account/?view=login">登录主站账号 ↗</a></div>';
+      return;
+    }
+    const games = Math.max(0, Number(value.games) || 0);
+    const wins = Math.max(0, Number(value.wins) || 0);
+    const winRate = Math.max(0, Math.min(100, Number(value.winRate) || 0));
+    box.innerHTML = `<div class="career-personal-grid">
+      <div class="career-personal-stat"><strong>${games}</strong><span>对局</span></div>
+      <div class="career-personal-stat"><strong>${wins}</strong><span>胜场</span></div>
+      <div class="career-personal-stat highlight"><strong>${winRate}%</strong><span>胜率</span></div>
+    </div>`;
   }
 
   function enterRoom(response) {
@@ -222,7 +233,7 @@
   });
   socket.on('disconnect', () => { $('.connection').classList.remove('online'); $('#connText').textContent='正在重连…'; });
   socket.on('rooms', rooms => { state.rooms = Array.isArray(rooms) ? rooms : []; renderRooms(); });
-  socket.on('leaderboard', rows => { state.leaderboard = Array.isArray(rows) ? rows : []; renderLeaderboard(); });
+  socket.on('career_stats', value => { state.careerStats = value || null; renderCareerStats(); });
   socket.on('room_state', room => { if (!state.room || room.code === state.room.code) { state.room=room; renderRoom(); } });
   socket.on('private_state', value => { state.private=value; renderRoom(); });
   socket.on('session_replaced', () => { toast('这个房间身份已在另一个页面接管'); backToLobby(); });
