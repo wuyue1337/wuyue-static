@@ -8,7 +8,7 @@ body.osu-stream-page{
     radial-gradient(circle at 76% 8%,rgba(183,151,255,.10),transparent 34%),
     radial-gradient(circle at 18% 22%,rgba(80,145,210,.11),transparent 38%),
     linear-gradient(180deg,rgba(7,10,24,.67) 0%,rgba(10,12,29,.78) 46%,rgba(10,12,29,.92) 100%),
-    url("https://wuyue1337.github.io/wuyue-static/ability/osu-stream/osu-stream-bg.webp?v=1");
+    url("https://wuyue1337.github.io/wuyue-static/ability/osu-stream/osu-stream-bg.avif?v=1");
   background-size:auto,auto,auto,cover;
   background-position:center,center,center,center 28%;
   background-repeat:no-repeat,no-repeat,no-repeat,no-repeat;

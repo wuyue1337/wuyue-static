@@ -3,7 +3,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const cdn = 'https://wuyue1337.github.io/wuyue-static';
-const staticExt = /\.(?:css|js|jpg|jpeg|png|webp|gif|svg|ico|woff2?|ttf|otf|mp3|wav|ogg|webm|mp4)(?:[?#].*)?$/i;
+const staticExt = /\.(?:css|js|jpg|jpeg|png|webp|avif|gif|svg|ico|woff2?|ttf|otf|mp3|wav|ogg|webm|mp4)(?:[?#].*)?$/i;
 const skipDirs = new Set(['.git','_private','node_modules','wuyue-static-publish']);
 
 function walk(dir, out=[]) {
@@ -66,7 +66,7 @@ for (const file of walk(root)) {
   if (/\.js$/i.test(file)) {
     // Rewrite root-relative static asset literals, but do not mutate literals used only for comparisons.
     // This keeps checks such as value === '/default-avatar.jpg' semantically correct.
-    text = text.replace(/(['"])(\/(?!api\/|socket\.io\/)[^'"\r\n]+\.(?:css|js|jpg|jpeg|png|webp|gif|svg|ico|woff2?|ttf|otf|mp3|wav|ogg|webm|mp4)(?:[?#][^'"\r\n]*)?)\1/gi,
+    text = text.replace(/(['"])(\/(?!api\/|socket\.io\/)[^'"\r\n]+\.(?:css|js|jpg|jpeg|png|webp|avif|gif|svg|ico|woff2?|ttf|otf|mp3|wav|ogg|webm|mp4)(?:[?#][^'"\r\n]*)?)\1/gi,
       (all, quote, value, offset, source) => {
         if (isComparisonLiteral(source, offset)) return all;
         return `${quote}${toCdnUrl(value, file)}${quote}`;

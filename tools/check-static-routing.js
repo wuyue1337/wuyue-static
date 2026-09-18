@@ -42,7 +42,7 @@ for (const file of walk(root)) {
   }
 
   if (/\.html$/i.test(file)) {
-    const assetRe = /\b(?:src|href)=(['"])(\/(?!api\/|socket\.io\/)[^'"<>]+\.(?:css|js|jpg|jpeg|png|webp|gif|svg|ico|woff2?|ttf|otf|mp3|wav|ogg|webm|mp4)(?:[?#][^'"<>]*)?)\1/gi;
+    const assetRe = /\b(?:src|href)=(['"])(\/(?!api\/|socket\.io\/)[^'"<>]+\.(?:css|js|jpg|jpeg|png|webp|avif|gif|svg|ico|woff2?|ttf|otf|mp3|wav|ogg|webm|mp4)(?:[?#][^'"<>]*)?)\1/gi;
     for (const match of text.matchAll(assetRe)) {
       problems.push({
         file: fileName,
