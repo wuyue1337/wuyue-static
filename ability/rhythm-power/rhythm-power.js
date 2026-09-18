@@ -268,7 +268,14 @@
     const key = normalizeKey(event.key);
     if (bindingLane !== null && gameSession.hidden) {
       event.preventDefault(); if (key === 'escape') { endBinding(); return; } if (event.ctrlKey || event.altKey || event.metaKey || !isBindableKey(key)) return;
-      const duplicateLane = keys.findIndex((value, index) => value === key && index !== bindingLane); if (duplicateLane !== -1) return; keys[bindingLane] = key;
+      const previousKey = keys[bindingLane];
+      const duplicateLane = keys.findIndex((value, index) => value === key && index !== bindingLane);
+      if (duplicateLane !== -1) {
+        keys[duplicateLane] = previousKey;
+        const swappedButton = keyBindRow.querySelector(`[data-bind-lane="${duplicateLane}"]`);
+        if (swappedButton && duplicateLane !== bindingLane) swappedButton.textContent = labelForLane(duplicateLane);
+      }
+      keys[bindingLane] = key;
       const currentButton = keyBindRow.querySelector(`[data-bind-lane="${bindingLane}"]`); if (currentButton) currentButton.textContent = labelForLane(bindingLane); advanceBinding(); return;
     }
     if (!gameSession.hidden) {
