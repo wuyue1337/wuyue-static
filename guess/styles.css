@@ -5,12 +5,12 @@
   --good:#67e8a5;--warn:#ffd166;--bad:#ff7b91;
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:Inter,"Microsoft YaHei",system-ui,sans-serif;background:
+body{margin:0;--game-sitebar-accent:var(--accent2);font-family:Inter,"Microsoft YaHei",system-ui,sans-serif;background:
 radial-gradient(circle at 10% 0%,#1e1b4b 0,transparent 32%),
 radial-gradient(circle at 90% 10%,#10294c 0,transparent 30%),var(--bg);color:var(--text)}
 button,input,select{font:inherit}
 button{cursor:pointer}
-.shell{max-width:1320px;margin:auto;padding:24px}
+.shell{max-width:1320px;margin:auto;padding:28px 24px 64px}
 .topbar{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:20px}
 .back-home{display:inline-block;margin-bottom:8px;color:var(--accent2);text-decoration:none;font-size:13px}
 .back-home:hover{text-decoration:underline}

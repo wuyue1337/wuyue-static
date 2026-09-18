@@ -1,0 +1,77 @@
+/* 霧月乐园 · 小游戏入口页公共顶部导航
+   游戏可以保留自己的主题视觉，但返回主站、右侧状态区和顶部高度必须共用这一层。 */
+
+.game-sitebar{
+  position:sticky;
+  top:0;
+  z-index:80;
+  width:100%;
+  flex:0 0 auto;
+  border-bottom:1px solid rgba(151,145,199,.16);
+  background:rgba(10,13,29,.84);
+  box-shadow:0 8px 28px rgba(2,4,14,.12);
+  -webkit-backdrop-filter:blur(16px);
+  backdrop-filter:blur(16px);
+}
+
+.game-sitebar-inner{
+  width:min(1180px,calc(100% - 32px));
+  min-height:64px;
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+}
+
+.game-sitebar-back{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+  color:#c8cce0;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:800;
+  letter-spacing:.025em;
+  white-space:nowrap;
+  transition:color .16s ease,transform .16s ease;
+}
+
+.game-sitebar-back:hover{
+  color:var(--game-sitebar-accent,#b5a7ff);
+  transform:translateX(-2px);
+}
+
+.game-sitebar-arrow{
+  color:var(--game-sitebar-accent,#b5a7ff);
+  font-size:16px;
+  line-height:1;
+}
+
+.game-sitebar-actions{
+  width:auto;
+  min-width:0;
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  flex-wrap:nowrap;
+}
+
+@media(max-width:680px){
+  .game-sitebar-inner{
+    width:min(100% - 20px,1180px);
+    min-height:56px;
+    gap:10px;
+  }
+
+  .game-sitebar-back{
+    font-size:13px;
+  }
+
+  .game-sitebar-actions{
+    gap:7px;
+  }
+}

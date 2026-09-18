@@ -28,6 +28,7 @@ html, body {
 
 body {
   overflow: hidden;
+  --game-sitebar-accent: var(--gold-bright);
 }
 
 .hidden { display: none !important; }
