@@ -3,7 +3,7 @@
 const STATIC_BASE = 'https://wuyue1337.github.io/wuyue-static';
 const websites = [
   { id: 'acgbox', name: 'ACG盒子', description: '二次元网站导航', url: 'https://www.acgbox.link/', icon: `${STATIC_BASE}/site-icons/acgbox.png`, fallback: 'ACG' },
-  { id: 'allcc', name: '樱之空导航', description: 'ACG资源导航', url: 'https://www.allcc.cc/', icon: `${STATIC_BASE}/site-icons/allcc.png`, fallback: '樱' },
+  { id: 'touhou', name: '東方联机', description: '可以多人联机的東方原作', url: 'https://touhou.vip/', icon: 'https://touhou.vip/favicon.ico', fallback: '東' },
   { id: 'acg123', name: '二刺螈导航', description: '动漫与二次元入口', url: 'https://www.acg123.co/', icon: `${STATIC_BASE}/site-icons/acg123.ico`, fallback: '二' },
   { id: 'lkssite', name: 'LKs网站推荐', description: '有趣网站合集', url: 'https://lkssite.vip/', icon: `${STATIC_BASE}/site-icons/lkssite.ico`, fallback: 'LKs' },
   { id: '2dfan', name: '2DFan', description: '视觉小说资料', url: 'https://2dfan.com/', icon: `${STATIC_BASE}/site-icons/2dfan.ico`, fallback: '2D' },
