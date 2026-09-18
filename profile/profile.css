@@ -155,3 +155,21 @@ a.profile-activity-item:hover{
 .score-rank{position:static;display:inline-flex;align-items:center;width:max-content;max-width:100%;margin-top:9px;padding:4px 7px;transform:none;border:1px solid #6f678e66;border-radius:999px;background:#26283d;color:#8991ac;font-size:9px;font-style:normal;font-weight:800;letter-spacing:0;text-shadow:none;white-space:nowrap}
 .score-variant-side b{color:#858da8;font-size:9px;font-style:normal;font-weight:800;white-space:nowrap}
 @media(max-width:650px){.score{padding-right:15px}.score-popover{margin:11px 0 -4px 0}}
+
+/* Verified third-party accounts */
+.profile-linked-accounts{display:grid;gap:10px}
+.profile-linked-account{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;padding:14px;border:1px solid #ffffff1a;border-radius:14px;background:#15192b;color:inherit;text-decoration:none;transition:border-color .18s,transform .18s,background .18s}
+.profile-linked-account:hover{transform:translateY(-1px);border-color:#ff86bd66;background:#1a1f34}
+.profile-linked-avatar-wrap{display:grid;place-items:center;width:58px;height:58px;border-radius:50%;overflow:hidden;background:#e967a4;color:#fff;font-size:15px;font-weight:900}
+.profile-linked-avatar{display:block;width:100%;height:100%;object-fit:cover}
+.profile-linked-copy{display:block;min-width:0}
+.profile-linked-title{display:flex;align-items:center;gap:8px;min-width:0}
+.profile-linked-title strong{overflow:hidden;color:#f2efff;font-size:15px;text-overflow:ellipsis;white-space:nowrap}
+.profile-linked-title em{display:inline-flex;align-items:center;padding:2px 7px;border:1px solid #68b88a66;border-radius:999px;background:#24543b;color:#baf0cf;font-size:9px;font-style:normal;font-weight:800;white-space:nowrap}
+.profile-linked-meta{display:block;margin-top:4px;color:#929ab6;font-size:10px}
+.profile-linked-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:10px}
+.profile-linked-stats>span{display:flex;flex-direction:column;gap:2px;min-width:0;padding:7px 8px;border:1px solid #ffffff10;border-radius:9px;background:#111527}
+.profile-linked-stats b{overflow:hidden;color:#e3defa;font-size:13px;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+.profile-linked-stats small{color:#7f88a5;font-size:8px}
+.profile-linked-footer{display:block;margin-top:8px;color:#c8bdf5;font-size:10px}
+@media(max-width:650px){.profile-linked-account{grid-template-columns:46px minmax(0,1fr);gap:11px}.profile-linked-avatar-wrap{width:46px;height:46px}.profile-linked-title{align-items:flex-start;flex-direction:column;gap:4px}.profile-linked-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}

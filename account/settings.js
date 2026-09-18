@@ -5,6 +5,7 @@
   const status = $('status');
   let auth = null;
   let pendingEmail = '';
+  const integrationParams = new URLSearchParams(location.search);
 
   async function request(url, options = {}) {
     let response;
@@ -78,6 +79,102 @@
       $('email-current').textContent = data.verified ? `当前邮箱：${data.email}` : '绑定邮箱后可以用邮箱验证码找回密码。';
       if (!data.mailConfigured) $('email-current').textContent += '（邮件服务还未配置）';
     } catch {}
+  }
+
+  function formatNumber(value, digits = 0) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return '';
+    return number.toLocaleString('zh-CN', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  }
+
+  function drawOsuProvider(provider) {
+    const account = provider?.account || null;
+    const configured = provider?.configured === true;
+    const host = $('osu-provider');
+    const icon = host?.querySelector('.linked-provider-icon');
+    const avatar = $('osu-provider-avatar');
+    const verified = $('osu-provider-verified');
+    const detail = $('osu-provider-detail');
+    const stats = $('osu-provider-stats');
+    const linkButton = $('osu-link-button');
+    const profileButton = $('osu-profile-button');
+    const refreshButton = $('osu-refresh-button');
+    const unlinkButton = $('osu-unlink-button');
+    if (!host || !avatar || !verified || !detail || !stats || !linkButton || !profileButton || !refreshButton || !unlinkButton) return;
+
+    if (!account) {
+      if (icon) icon.hidden = false;
+      avatar.hidden = true;
+      avatar.removeAttribute('src');
+      verified.hidden = true;
+      profileButton.hidden = true;
+      refreshButton.hidden = true;
+      unlinkButton.hidden = true;
+      linkButton.hidden = false;
+      linkButton.setAttribute('aria-disabled', configured ? 'false' : 'true');
+      if (configured) {
+        linkButton.href = '/api/integrations/osu/start';
+        linkButton.style.pointerEvents = '';
+        detail.textContent = '未绑定 osu! 账号';
+        stats.textContent = '绑定时会跳转到 osu! 官方授权页面。';
+      } else {
+        linkButton.removeAttribute('href');
+        linkButton.style.pointerEvents = 'none';
+        detail.textContent = 'osu! 授权尚未完成服务器配置';
+        stats.textContent = '需要先在本机填写 OSU_CLIENT_SECRET 并重启网站。';
+      }
+      return;
+    }
+
+    if (icon) icon.hidden = Boolean(account.avatarUrl);
+    if (account.avatarUrl) {
+      avatar.src = account.avatarUrl;
+      avatar.hidden = false;
+    } else {
+      avatar.hidden = true;
+      avatar.removeAttribute('src');
+    }
+    verified.hidden = false;
+    detail.textContent = account.username || '已绑定 osu! 账号';
+    const parts = [];
+    if (account.mode) parts.push(account.mode);
+    if (account.pp != null && Number.isFinite(Number(account.pp))) parts.push(`${formatNumber(account.pp, 0)} pp`);
+    if (Number.isSafeInteger(Number(account.globalRank)) && Number(account.globalRank) > 0) parts.push(`全球 #${formatNumber(account.globalRank)}`);
+    if (Number.isSafeInteger(Number(account.countryRank)) && Number(account.countryRank) > 0) parts.push(`国家 #${formatNumber(account.countryRank)}`);
+    stats.textContent = parts.join(' · ') || '已通过 osu! 官方 OAuth 验证';
+    linkButton.hidden = true;
+    profileButton.hidden = !account.profileUrl;
+    if (account.profileUrl) profileButton.href = account.profileUrl;
+    refreshButton.hidden = false;
+    unlinkButton.hidden = false;
+  }
+
+  async function loadIntegrations() {
+    try {
+      const data = await request('/api/integrations/me');
+      drawOsuProvider(data.providers?.osu);
+    } catch (error) {
+      inlineMessage('osu-action-status', error.message);
+    }
+  }
+
+  function showIntegrationReturnStatus() {
+    if (integrationParams.get('integration') !== 'osu') return;
+    const result = integrationParams.get('status');
+    const messages = {
+      linked: ['osu! 账号绑定成功。', true],
+      cancelled: ['已取消 osu! 授权。', false],
+      taken: ['这个 osu! 账号已经绑定到另一个霧月账号。', false],
+      'invalid-state': ['osu! 授权已过期，请重新绑定。', false],
+      'not-configured': ['服务器还没有配置 osu! Client Secret。', false],
+      error: ['osu! 绑定失败，请稍后再试。', false]
+    };
+    const item = messages[result];
+    if (item) {
+      inlineMessage('osu-action-status', item[0], item[1]);
+      message(item[0], item[1]);
+    }
+    history.replaceState(null, '', location.pathname);
   }
 
   function loadPreferences() {
@@ -201,6 +298,48 @@
     finally { button.disabled = false; }
   });
 
+  $('osu-refresh-button').addEventListener('click', async () => {
+    const button = $('osu-refresh-button');
+    button.disabled = true;
+    inlineMessage('osu-action-status', '正在从 osu! 刷新公开资料…');
+    try {
+      const data = await request('/api/integrations/osu/refresh', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-csrf-token': auth.csrf },
+        body: '{}'
+      });
+      await loadIntegrations();
+      inlineMessage('osu-action-status', 'osu! 资料已刷新。', true);
+      message('osu! 资料已刷新。', true);
+    } catch (error) {
+      inlineMessage('osu-action-status', error.message);
+      message(error.message);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  $('osu-unlink-button').addEventListener('click', async () => {
+    if (!confirm('确定解除 osu! 账号绑定吗？之后可以重新授权绑定。')) return;
+    const button = $('osu-unlink-button');
+    button.disabled = true;
+    inlineMessage('osu-action-status', '正在解除绑定…');
+    try {
+      await request('/api/integrations/osu', {
+        method: 'DELETE',
+        headers: { 'x-csrf-token': auth.csrf }
+      });
+      await loadIntegrations();
+      inlineMessage('osu-action-status', '已解除 osu! 账号绑定。', true);
+      message('已解除 osu! 账号绑定。', true);
+    } catch (error) {
+      inlineMessage('osu-action-status', error.message);
+      message(error.message);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
   $('logout').addEventListener('click', async () => {
     const button = $('logout'); button.disabled = true;
     try {
@@ -215,9 +354,10 @@
       if (!auth.authenticated) { location.replace('/account/?view=login&next=settings'); return; }
       drawProfile(auth.user);
       loadPreferences(); bindPreferences();
-      await Promise.all([loadSocial(), loadEmail()]);
+      await Promise.all([loadSocial(), loadEmail(), loadIntegrations()]);
       $('settings-loading').hidden = true;
       $('settings-shell').hidden = false;
+      showIntegrationReturnStatus();
     } catch (error) {
       $('settings-loading').textContent = error.message;
     }

@@ -376,6 +376,97 @@
     if (!count) scores.innerHTML = '<p class="empty">还没有能力测试纪录。</p>';
   }
 
+  function renderLinkedAccounts() {
+    const card = document.getElementById('linked-accounts-card');
+    const host = document.getElementById('linked-accounts');
+    if (!card || !host) return;
+    const connections = Array.isArray(data.profileData?.connections) ? data.profileData.connections : [];
+    host.replaceChildren();
+    if (!connections.length) {
+      card.hidden = true;
+      return;
+    }
+    card.hidden = false;
+
+    const modeNames = { osu: 'osu!standard', taiko: 'osu!taiko', fruits: 'osu!catch', mania: 'osu!mania' };
+    const numberText = value => {
+      const number = Number(value);
+      return Number.isFinite(number) ? number.toLocaleString('zh-CN') : '—';
+    };
+
+    for (const connection of connections) {
+      if (connection?.provider !== 'osu') continue;
+      const item = document.createElement('a');
+      item.className = 'profile-linked-account osu';
+      const profileUrl = typeof connection.profileUrl === 'string' && /^https:\/\/osu\.ppy\.sh\/users\/\d+\/?$/i.test(connection.profileUrl)
+        ? connection.profileUrl
+        : `https://osu.ppy.sh/users/${encodeURIComponent(connection.userId || '')}`;
+      item.href = profileUrl;
+      item.target = '_blank';
+      item.rel = 'noopener noreferrer';
+
+      const avatarWrap = document.createElement('span');
+      avatarWrap.className = 'profile-linked-avatar-wrap';
+      if (typeof connection.avatarUrl === 'string' && /^https:\/\//i.test(connection.avatarUrl)) {
+        const avatar = document.createElement('img');
+        avatar.className = 'profile-linked-avatar';
+        avatar.src = connection.avatarUrl;
+        avatar.alt = '';
+        avatar.loading = 'lazy';
+        avatar.referrerPolicy = 'no-referrer';
+        avatarWrap.appendChild(avatar);
+      } else {
+        avatarWrap.textContent = 'osu!';
+      }
+
+      const copy = document.createElement('span');
+      copy.className = 'profile-linked-copy';
+      const title = document.createElement('span');
+      title.className = 'profile-linked-title';
+      const name = document.createElement('strong');
+      name.textContent = connection.username || 'osu! 玩家';
+      const verified = document.createElement('em');
+      verified.textContent = '✓ 已验证绑定';
+      title.append(name, verified);
+
+      const meta = document.createElement('span');
+      meta.className = 'profile-linked-meta';
+      const metaParts = [modeNames[connection.mode] || connection.mode || 'osu!'];
+      if (connection.countryCode) metaParts.push(connection.countryCode);
+      if (connection.supporter) metaParts.push('supporter');
+      meta.textContent = metaParts.join(' · ');
+
+      const stats = document.createElement('span');
+      stats.className = 'profile-linked-stats';
+      const cells = [
+        ['PP', connection.pp != null && Number.isFinite(Number(connection.pp)) ? Number(connection.pp).toLocaleString('zh-CN', { maximumFractionDigits: 0 }) : '—'],
+        ['全球', Number(connection.globalRank) > 0 ? `#${numberText(connection.globalRank)}` : '—'],
+        ['国家', Number(connection.countryRank) > 0 ? `#${numberText(connection.countryRank)}` : '—'],
+        ['准确率', connection.accuracy != null && Number.isFinite(Number(connection.accuracy)) ? `${Number(connection.accuracy).toFixed(2)}%` : '—']
+      ];
+      for (const [labelText, valueText] of cells) {
+        const cell = document.createElement('span');
+        const value = document.createElement('b');
+        value.textContent = valueText;
+        const label = document.createElement('small');
+        label.textContent = labelText;
+        cell.append(value, label);
+        stats.append(cell);
+      }
+
+      const footer = document.createElement('span');
+      footer.className = 'profile-linked-footer';
+      const plays = Number(connection.playCount);
+      footer.textContent = `${Number.isSafeInteger(plays) ? `游玩 ${numberText(plays)} 次 · ` : ''}查看 osu! 主页 ↗`;
+
+      copy.append(title, meta, stats, footer);
+      item.append(avatarWrap, copy);
+      host.append(item);
+    }
+
+    if (!host.children.length) card.hidden = true;
+  }
+
   function renderGameRecords() {
     const host = document.getElementById('game-records');
     const card = document.getElementById('game-records-card');
@@ -458,6 +549,7 @@
     }
   }
 
+  renderLinkedAccounts();
   renderScores();
   renderGameRecords();
   renderRecentActivity();
