@@ -38,6 +38,10 @@
     return status || '未知';
   }
 
+  function modeText(mode) {
+    return mode === 'text' ? '💬 文字模式' : '🎙 语音模式';
+  }
+
   function showError(text) {
     if (!homeError) return;
     homeError.textContent = text;
@@ -67,7 +71,7 @@
           <small>@${escapeHtml(user.username || '')}${user.memberNo ? ` · ID #${Number(user.memberNo)}` : ''}</small>
         </div>
       `;
-      createCard.insertBefore(identity, createCard.querySelector('.home-actions'));
+      createCard.insertBefore(identity, createCard.querySelector('.room-mode-picker') || createCard.querySelector('.home-actions'));
     } catch (_) {
       // 未登录或账号接口暂不可用时，继续显示游客昵称输入框。
     }
@@ -103,6 +107,7 @@
           </div>
           <div class="public-room-meta">
             <span>房间码 ${escapeHtml(room.roomCode)}</span>
+            <span class="public-room-mode ${room.mode === 'text' ? 'text' : 'voice'}">${modeText(room.mode)}</span>
             <span>${Number(room.connected || 0)}/${Number(room.maxPlayers || 10)} 人在线</span>
           </div>
         </div>

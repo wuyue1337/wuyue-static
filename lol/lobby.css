@@ -249,3 +249,64 @@
     width: 100%;
   }
 }
+
+
+/* LOL 猜英雄 · 房间玩法选择 */
+.room-mode-picker{
+  margin-top:18px;
+}
+.room-mode-options{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.room-mode-option{
+  min-width:0;
+  padding:13px 12px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:rgba(10,20,40,.58);
+  color:var(--text);
+  text-align:left;
+  cursor:pointer;
+  font:inherit;
+  transition:border-color .16s ease,background .16s ease,transform .16s ease,box-shadow .16s ease;
+}
+.room-mode-option:hover{
+  transform:translateY(-1px);
+  border-color:rgba(200,170,110,.58);
+}
+.room-mode-option.active{
+  border-color:var(--gold);
+  background:linear-gradient(135deg,rgba(200,170,110,.16),rgba(10,200,185,.07));
+  box-shadow:0 0 0 2px rgba(200,170,110,.08) inset;
+}
+.room-mode-option strong{
+  display:block;
+  margin-bottom:5px;
+  color:var(--gold-bright);
+  font-size:14px;
+}
+.room-mode-option small{
+  display:block;
+  color:var(--text-dim);
+  font-size:11px;
+  line-height:1.55;
+}
+.public-room-mode{
+  padding:1px 7px;
+  border-radius:999px;
+  border:1px solid rgba(200,170,110,.2);
+}
+.public-room-mode.text{
+  color:#bde7e2;
+  border-color:rgba(10,200,185,.28);
+  background:rgba(10,200,185,.08);
+}
+.public-room-mode.voice{
+  color:#f0d49b;
+  background:rgba(200,170,110,.08);
+}
+@media(max-width:560px){
+  .room-mode-options{grid-template-columns:1fr}
+}

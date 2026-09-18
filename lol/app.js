@@ -15,9 +15,12 @@
   const roomCodeInput = $('roomCodeInput');
   const joinRoomBtn = $('joinRoomBtn');
   const homeError = $('homeError');
+  const roomModeInput = $('roomModeInput');
+  const roomModeOptions = [...document.querySelectorAll('[data-room-mode]')];
 
   const leaveBtn = $('leaveBtn');
   const roomCodeBadge = $('roomCodeBadge');
+  const roomModeBadge = $('roomModeBadge');
   const roomStatusPill = $('roomStatusPill');
 
   const lobbyPanel = $('lobbyPanel');
@@ -34,6 +37,38 @@
   const guessBtn = $('guessBtn');
   const guessFeedback = $('guessFeedback');
   const guessBox = $('guessBox');
+
+  const turnActionDock = $('turnActionDock');
+  const turnActionDockTitle = $('turnActionDockTitle');
+  const turnActionDockText = $('turnActionDockText');
+  const openTurnBtn = $('openTurnBtn');
+  const turnModal = $('turnModal');
+  const turnModalClose = $('turnModalClose');
+  const turnModalMode = $('turnModalMode');
+  const turnWaitingPane = $('turnWaitingPane');
+  const turnWaitingText = $('turnWaitingText');
+  const turnChoicePane = $('turnChoicePane');
+  const questionComposePane = $('questionComposePane');
+  const questionActivePane = $('questionActivePane');
+  const voiceTurnPane = $('voiceTurnPane');
+  const turnGuessPane = $('turnGuessPane');
+  const chooseQuestionBtn = $('chooseQuestionBtn');
+  const chooseGuessBtn = $('chooseGuessBtn');
+  const backToTurnChoiceBtn = $('backToTurnChoiceBtn');
+  const turnQuestionInput = $('turnQuestionInput');
+  const submitQuestionBtn = $('submitQuestionBtn');
+  const questionComposeFeedback = $('questionComposeFeedback');
+  const activeQuestionText = $('activeQuestionText');
+  const activeQuestionAuthor = $('activeQuestionAuthor');
+  const questionAnswers = $('questionAnswers');
+  const answerComposer = $('answerComposer');
+  const turnAnswerInput = $('turnAnswerInput');
+  const submitTurnAnswerBtn = $('submitTurnAnswerBtn');
+  const answerFeedback = $('answerFeedback');
+  const questionOwnerActions = $('questionOwnerActions');
+  const endQuestionTurnBtn = $('endQuestionTurnBtn');
+  const voiceGuessBtn = $('voiceGuessBtn');
+  const passBtn = $('passBtn');
 
   const endPanel = $('endPanel');
   const resultsList = $('resultsList');
@@ -58,6 +93,9 @@
     roomCode: null,
     isHost: false,
     status: 'lobby',
+    mode: 'voice',
+    turnAction: null,
+    turnUiKey: '',
     ddVersion: null,
     champions: [],       // [{id, name, title}]
     champById: new Map(),
@@ -126,6 +164,18 @@
   tabGameBtn.addEventListener('click', () => setTab('game'));
   tabChatBtn.addEventListener('click', () => setTab('chat'));
 
+  roomModeOptions.forEach((button) => {
+    button.addEventListener('click', () => {
+      const mode = button.dataset.roomMode === 'text' ? 'text' : 'voice';
+      roomModeInput.value = mode;
+      roomModeOptions.forEach((item) => {
+        const active = item === button;
+        item.classList.toggle('active', active);
+        item.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+    });
+  });
+
   // ---------- 房间初始化 ----------
   function connectSocket() {
     if (state.socket) return state.socket;
@@ -139,7 +189,7 @@
     state.roomCode = roomCode;
     state.myId = ack.playerId;
     localStorage.setItem(SESSION_KEY, JSON.stringify({roomCode, playerId: ack.playerId, token: ack.token}));
-    roomCodeBadge.textContent = `房间码 ${roomCode} · 复制`;
+    roomCodeBadge.textContent = `房间码 ${roomCode}`;
     applyRoomState(ack.state);
     showScreen('room');
     setTab('game');
@@ -153,7 +203,7 @@
     try {
       if (!state.ddVersion) await loadChampionData();
       const socket = connectSocket();
-      socket.emit('create_room', { nickname }, (ack) => {
+      socket.emit('create_room', { nickname, mode: roomModeInput?.value === 'text' ? 'text' : 'voice' }, (ack) => {
         createRoomBtn.disabled = false;
         if (!ack || !ack.ok) return showHomeError((ack && ack.error) || '创建房间失败');
         enterRoom(ack.roomCode, ack);
@@ -200,28 +250,16 @@
     $('connectionBanner').classList.add('hidden');
     state.roomCode = null;
     state.status = 'lobby';
+    state.mode = 'voice';
+    state.turnAction = null;
+    state.turnUiKey = '';
     state.others = [];
     state.myChampionId = null;
     chatMessages.innerHTML = '';
+    turnModal?.classList.add('hidden');
+    turnActionDock?.classList.add('hidden');
     showScreen('home');
   }
-
-  roomCodeBadge.addEventListener('click', async () => {
-    if (!state.roomCode) return;
-    try {
-      if (!navigator.clipboard || !window.isSecureContext) throw new Error('fallback');
-      await navigator.clipboard.writeText(state.roomCode);
-      showToast('房间码已复制，发给好友即可加入');
-    } catch (_) {
-      const input = document.createElement('textarea');
-      input.value = state.roomCode;
-      input.style.cssText = 'position:fixed;left:-9999px';
-      document.body.appendChild(input); input.select();
-      const copied = document.execCommand('copy'); input.remove();
-      if (copied) showToast('房间码已复制');
-      else window.prompt('请复制房间码', state.roomCode);
-    }
-  });
 
   function restoreGame(payload) {
     state.ddVersion = payload.version || state.ddVersion;
@@ -292,17 +330,28 @@
   }
 
   function applyRoomState(payload) {
-    const previousTurn = state.currentPlayerId;
+    const previousKey = state.turnUiKey;
     state.currentPlayerId = payload.currentPlayerId;
     state.round = payload.round;
     state.clockOffset = payload.serverNow - Date.now();
     state.status = payload.status;
+    state.mode = payload.mode === 'text' ? 'text' : 'voice';
+    state.turnAction = payload.turnAction || null;
     state.latestPlayers = payload.players;
     if (payload.version) state.ddVersion = payload.version;
     const me = payload.players.find((p) => p.id === state.myId);
     state.isHost = !!(me && me.isHost);
-    renderRoster(); updateTurn();
-    if (previousTurn !== state.currentPlayerId && state.currentPlayerId === state.myId) showToast('轮到你了！提问后猜测，或结束回合');
+    if (roomModeBadge) roomModeBadge.textContent = state.mode === 'text' ? '💬 文字模式' : '🎙 语音模式';
+
+    const answerStamp = state.turnAction?.type === 'question'
+      ? (state.turnAction.answers || []).map(item => `${item.playerId}:${item.updatedAt || ''}`).join(',')
+      : '';
+    state.turnUiKey = [state.status, state.currentPlayerId || '', state.turnAction?.type || '', state.turnAction?.question || '', answerStamp].join('|');
+    const turnChanged = previousKey !== state.turnUiKey;
+
+    renderRoster();
+    updateTurn();
+    renderTurnUI(turnChanged);
 
     roomStatusPill.textContent =
       payload.status === 'lobby' ? '等待中' : payload.status === 'playing' ? '进行中' : '已结束';
@@ -500,6 +549,8 @@
         guessFeedback.textContent = (ack && ack.error) || '猜测失败,请重试';
         return;
       }
+      closeTurnModal();
+      delete guessInput.dataset.selectedId;
       if (ack.correct) {
         state.myChampionId = ack.championId;
         const c = state.champById.get(ack.championId);
@@ -579,26 +630,248 @@
     $('rosterCount').textContent = `${state.latestPlayers.length} / 10`;
     updateCountdowns();
   }
+  function setTurnPane(pane) {
+    [turnWaitingPane, turnChoicePane, questionComposePane, questionActivePane, voiceTurnPane, turnGuessPane]
+      .forEach(item => item?.classList.toggle('hidden', item !== pane));
+  }
+
+  function openTurnModal() {
+    if (!turnModal || state.status !== 'playing') return;
+    turnModal.classList.remove('hidden');
+  }
+
+  function closeTurnModal() {
+    turnModal?.classList.add('hidden');
+    renderSuggestions([]);
+  }
+
+  function currentTurnPlayer() {
+    return state.latestPlayers.find(player => player.id === state.currentPlayerId) || null;
+  }
+
+  function renderQuestionPane(action, mine) {
+    setTurnPane(questionActivePane);
+    const current = currentTurnPlayer();
+    activeQuestionText.textContent = action.question || '—';
+    activeQuestionAuthor.textContent = current ? `${current.seat}号 · ${current.nickname} 提问` : '当前玩家提问';
+
+    const answers = Array.isArray(action.answers) ? action.answers : [];
+    questionAnswers.replaceChildren();
+    if (!answers.length) {
+      const empty = document.createElement('p');
+      empty.className = 'question-answer-empty';
+      empty.textContent = '还没有人回答。';
+      questionAnswers.appendChild(empty);
+    } else {
+      for (const answer of answers) {
+        const row = document.createElement('div');
+        row.className = 'question-answer-row';
+        const name = document.createElement('strong');
+        name.textContent = answer.playerId === state.myId ? `${answer.nickname}（你）` : answer.nickname;
+        const text = document.createElement('span');
+        text.textContent = answer.text;
+        row.append(name, text);
+        questionAnswers.appendChild(row);
+      }
+    }
+
+    questionOwnerActions.classList.toggle('hidden', !mine);
+    answerComposer.classList.toggle('hidden', mine);
+    if (!mine) {
+      const mineAnswer = answers.find(answer => answer.playerId === state.myId);
+      if (document.activeElement !== turnAnswerInput) turnAnswerInput.value = mineAnswer?.text || '';
+      submitTurnAnswerBtn.textContent = mineAnswer ? '更新回答' : '提交回答';
+      answerFeedback.textContent = '';
+    }
+  }
+
+  function renderTurnUI(autoOpen = false) {
+    if (!turnActionDock || !turnModal) return;
+    const current = currentTurnPlayer();
+    const me = state.latestPlayers.find(player => player.id === state.myId);
+    const mine = current?.id === state.myId && !me?.guessedCorrectly;
+    const action = state.turnAction;
+
+    if (state.status !== 'playing') {
+      turnActionDock.classList.add('hidden');
+      closeTurnModal();
+      return;
+    }
+
+    turnActionDock.classList.remove('hidden');
+    turnModalMode.textContent = state.mode === 'text' ? '💬 文字模式' : '🎙 语音模式';
+
+    if (state.mode === 'text') {
+      if (action?.type === 'question') {
+        renderQuestionPane(action, mine);
+        turnActionDockTitle.textContent = mine ? '你的问题正在等待回答' : `${current?.nickname || '当前玩家'} 正在提问`;
+        turnActionDockText.textContent = mine ? `已收到 ${(action.answers || []).length} 条回答` : action.question;
+        openTurnBtn.disabled = false;
+        if (autoOpen) openTurnModal();
+        return;
+      }
+
+      if (mine) {
+        if (action?.type === 'guess') {
+          setTurnPane(turnGuessPane);
+          turnActionDockTitle.textContent = '本回合已选择直接答题';
+          turnActionDockText.textContent = '请选择英雄并提交，本回合不能再提问';
+          guessInput.disabled = false;
+          guessBtn.disabled = false;
+        } else {
+          setTurnPane(turnChoicePane);
+          turnActionDockTitle.textContent = '轮到你了';
+          turnActionDockText.textContent = '请选择“提出问题”或“直接答题”';
+        }
+        openTurnBtn.disabled = false;
+        if (autoOpen) openTurnModal();
+        return;
+      }
+
+      setTurnPane(turnWaitingPane);
+      turnWaitingText.textContent = current ? `等待 ${current.seat}号 · ${current.nickname} 选择本回合操作…` : '等待中…';
+      turnActionDockTitle.textContent = current ? `等待 ${current.nickname}` : '等待中';
+      turnActionDockText.textContent = '轮到对方选择提问或答题';
+      openTurnBtn.disabled = true;
+      if (!action) closeTurnModal();
+      return;
+    }
+
+    if (mine) {
+      setTurnPane(voiceTurnPane);
+      turnActionDockTitle.textContent = '轮到你了 · 语音模式';
+      turnActionDockText.textContent = '在语音里提问，需要猜英雄时再点“我要答题”';
+      openTurnBtn.disabled = false;
+      if (autoOpen) openTurnModal();
+    } else {
+      setTurnPane(turnWaitingPane);
+      turnWaitingText.textContent = current ? `等待 ${current.seat}号 · ${current.nickname} 在语音中进行回合…` : '等待中…';
+      turnActionDockTitle.textContent = current ? `等待 ${current.nickname}` : '等待中';
+      turnActionDockText.textContent = '请在语音里回答当前玩家的问题';
+      openTurnBtn.disabled = true;
+      closeTurnModal();
+    }
+  }
+
+  openTurnBtn?.addEventListener('click', () => {
+    renderTurnUI(false);
+    openTurnModal();
+  });
+  turnModalClose?.addEventListener('click', closeTurnModal);
+
+  chooseQuestionBtn?.addEventListener('click', () => {
+    questionComposeFeedback.textContent = '';
+    turnQuestionInput.value = '';
+    setTurnPane(questionComposePane);
+    turnQuestionInput.focus();
+  });
+  backToTurnChoiceBtn?.addEventListener('click', () => setTurnPane(turnChoicePane));
+
+  submitQuestionBtn?.addEventListener('click', () => {
+    const question = turnQuestionInput.value.trim();
+    if (!question) {
+      questionComposeFeedback.textContent = '先输入一个问题。';
+      return;
+    }
+    submitQuestionBtn.disabled = true;
+    state.socket.emit('turn_question', { question }, (ack) => {
+      submitQuestionBtn.disabled = false;
+      if (!ack?.ok) questionComposeFeedback.textContent = ack?.error || '提问失败，请重试';
+    });
+  });
+
+  chooseGuessBtn?.addEventListener('click', () => {
+    chooseGuessBtn.disabled = true;
+    state.socket.emit('turn_choose_guess', {}, (ack) => {
+      chooseGuessBtn.disabled = false;
+      if (!ack?.ok) return showToast(ack?.error || '无法进入答题');
+      guessInput.value = '';
+      delete guessInput.dataset.selectedId;
+      guessFeedback.textContent = '';
+    });
+  });
+
+  voiceGuessBtn?.addEventListener('click', () => {
+    setTurnPane(turnGuessPane);
+    guessInput.value = '';
+    delete guessInput.dataset.selectedId;
+    guessFeedback.textContent = '';
+    guessInput.disabled = false;
+    guessBtn.disabled = false;
+    guessInput.focus();
+  });
+
+  document.querySelectorAll('[data-quick-answer]').forEach(button => {
+    button.addEventListener('click', () => {
+      turnAnswerInput.value = button.dataset.quickAnswer || '';
+      turnAnswerInput.focus();
+    });
+  });
+
+  submitTurnAnswerBtn?.addEventListener('click', () => {
+    const text = turnAnswerInput.value.trim();
+    if (!text) {
+      answerFeedback.textContent = '请输入回答。';
+      return;
+    }
+    submitTurnAnswerBtn.disabled = true;
+    state.socket.emit('turn_answer', { text }, (ack) => {
+      submitTurnAnswerBtn.disabled = false;
+      if (!ack?.ok) answerFeedback.textContent = ack?.error || '回答失败，请重试';
+      else answerFeedback.textContent = '回答已提交，可以继续修改。';
+    });
+  });
+
+  endQuestionTurnBtn?.addEventListener('click', () => {
+    endQuestionTurnBtn.disabled = true;
+    state.socket.emit('pass_turn', {}, ack => {
+      endQuestionTurnBtn.disabled = false;
+      if (!ack?.ok) return showToast(ack?.error || '结束回合失败');
+      closeTurnModal();
+    });
+  });
+
+  passBtn?.addEventListener('click', () => {
+    passBtn.disabled = true;
+    state.socket.emit('pass_turn', {}, ack => {
+      passBtn.disabled = false;
+      if (!ack?.ok) return showToast(ack?.error || '结束回合失败');
+      closeTurnModal();
+    });
+  });
+
   function updateTurn() {
-    const current = state.latestPlayers.find(p => p.id === state.currentPlayerId);
+    const current = currentTurnPlayer();
+    const me = state.latestPlayers.find(player => player.id === state.myId);
     const mine = current?.id === state.myId;
-    const canGuess = state.status === 'playing' && mine && !!state.socket?.connected && !state.latestPlayers.find(p=>p.id===state.myId)?.guessedCorrectly;
-    guessInput.disabled = !canGuess; guessBtn.disabled = !canGuess; $('passBtn').disabled = !canGuess;
+    const eligible = state.status === 'playing' && mine && !!state.socket?.connected && !me?.guessedCorrectly;
+    const canGuess = eligible && (state.mode === 'voice' || state.turnAction?.type === 'guess');
+
+    guessInput.disabled = !canGuess;
+    guessBtn.disabled = !canGuess;
     $('turnBanner').classList.toggle('hidden', state.status !== 'playing');
     $('turnBanner').classList.toggle('your-turn', mine);
-    $('turnBanner').innerHTML = `<span>第 ${state.round || 1} 轮 · 按座位顺序</span><strong>${mine ? '轮到你作答了！' : current ? `等待 ${current.seat}号 · ${escapeHtml(current.nickname)} ${memberBadge(current)} 作答` : '等待中'}</strong><small>${current && !current.connected ? offlineTag(current) : mine ? '向大家提问，再提交一次猜测；也可以结束回合' : '你可以在聊天区回答问题、提供线索'}</small>`;
+
+    let detail = '';
+    if (current && !current.connected) detail = offlineTag(current);
+    else if (state.mode === 'voice') detail = mine
+      ? '在语音里提问；需要猜英雄时打开回合窗口点“我要答题”'
+      : '请在语音里回答当前玩家的问题';
+    else if (state.turnAction?.type === 'question') detail = mine
+      ? `你的问题已发出 · 已收到 ${(state.turnAction.answers || []).length} 条回答`
+      : `请回答：${escapeHtml(state.turnAction.question)}`;
+    else if (state.turnAction?.type === 'guess') detail = mine ? '你已选择直接答题，请填写英雄答案' : '当前玩家选择了直接答题';
+    else detail = mine ? '请选择提出问题或直接答题；本回合只能二选一' : '等待当前玩家选择提问或答题';
+
+    $('turnBanner').innerHTML = `<span>第 ${state.round || 1} 轮 · ${state.mode === 'text' ? '文字模式' : '语音模式'}</span><strong>${mine ? '轮到你了！' : current ? `等待 ${current.seat}号 · ${escapeHtml(current.nickname)} ${memberBadge(current)}` : '等待中'}</strong><small>${detail}</small>`;
     if (!canGuess) renderSuggestions([]);
     updateCountdowns();
   }
+
   function updateCountdowns() {
     document.querySelectorAll('[data-deadline]').forEach(el => { el.textContent = Math.max(0, Math.ceil((Number(el.dataset.deadline) - Date.now() - (state.clockOffset || 0))/1000)); });
     if (state.roomCode && state.socket && !state.socket.connected) $('connectionBanner').textContent = `连接已断开，正在自动重连 · 座位保留约 ${Math.max(0, Math.ceil((state.localDeadline-Date.now())/1000))} 秒`;
   }
-  $('passBtn').addEventListener('click', () => {
-    if ($('passBtn').disabled) return;
-    $('passBtn').disabled = true;
-    state.socket.emit('pass_turn', {}, ack => { if (!ack?.ok) showToast(ack?.error || '操作失败'); updateTurn(); });
-  });
   setInterval(updateCountdowns, 250);
   connectSocket();
 
