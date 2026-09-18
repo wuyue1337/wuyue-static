@@ -184,3 +184,14 @@ a.profile-activity-item:hover{
 .profile-linked-manage{width:max-content;margin-top:2px;padding:7px 10px;border-color:#716b9166;background:#252a42;color:#c8c1e8}
 .profile-linked-manage:hover{background:#303650;color:#fff}
 @media(max-width:650px){.profile-link-prompt{grid-template-columns:44px minmax(0,1fr)}.profile-link-prompt-icon{width:44px;height:44px}.profile-link-prompt-action{grid-column:1/-1;width:100%}}
+
+/* Owner-customizable public profile section order */
+.profile-sort-handle{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;min-width:0!important;margin:0!important;padding:6px 8px!important;border:1px solid #77709655!important;border-radius:8px!important;background:#252a42!important;color:#9ca5c2!important;font-size:10px!important;font-weight:800!important;line-height:1!important;cursor:grab!important;touch-action:none;user-select:none}
+.profile-sort-handle:hover,.profile-sort-handle:focus-visible{border-color:#a795ef88!important;background:#303650!important;color:#e5e0ff!important;outline:none}
+.profile-sort-handle:active{cursor:grabbing!important}
+.profile-sort-handle>span{display:block!important;color:inherit!important;font-size:14px!important;line-height:.8!important;letter-spacing:-4px!important;transform:rotate(90deg)}
+.profile-sort-handle>small{color:inherit!important;font-size:9px!important;white-space:nowrap}
+.profile-sortable-section.profile-dragging{z-index:80;opacity:.82;transform:scale(.995);border-color:#b09effaa;box-shadow:0 18px 45px #05071380,0 0 0 2px #a18cf52b inset;transition:none}
+body.profile-sorting{cursor:grabbing;user-select:none}
+body.profile-sorting .profile-sortable-section:not(.profile-dragging){transition:transform .14s,border-color .14s}
+@media(max-width:650px){.profile-sortable-section .section-head{align-items:center;flex-wrap:wrap}.profile-sortable-section .section-head>div{min-width:0;flex:1}.profile-sortable-section .section-head>span{order:3;width:100%}.profile-sort-handle{margin-left:auto!important}}

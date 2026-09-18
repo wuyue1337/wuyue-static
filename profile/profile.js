@@ -27,6 +27,33 @@
 
   const user = data.user;
   data.showcase ||= {};
+  const DEFAULT_PROFILE_SECTION_ORDER = ['linked-accounts', 'abilities', 'game-records', 'recent-activity', 'achievements'];
+  const normalizeProfileSectionOrder = order => {
+    const seen = new Set();
+    const result = [];
+    for (const key of Array.isArray(order) ? order : []) {
+      if (DEFAULT_PROFILE_SECTION_ORDER.includes(key) && !seen.has(key)) {
+        seen.add(key);
+        result.push(key);
+      }
+    }
+    for (const key of DEFAULT_PROFILE_SECTION_ORDER) if (!seen.has(key)) result.push(key);
+    return result;
+  };
+  const profileMain = document.querySelector('main');
+  const profileStatusNode = document.getElementById('status');
+  const profileSection = key => document.querySelector(`[data-profile-section="${key}"]`);
+  const currentProfileSectionOrder = () => [...document.querySelectorAll('[data-profile-section]')].map(section => section.dataset.profileSection);
+  function applyProfileSectionOrder(order) {
+    if (!profileMain || !profileStatusNode) return;
+    for (const key of normalizeProfileSectionOrder(order)) {
+      const section = profileSection(key);
+      if (section) profileMain.insertBefore(section, profileStatusNode);
+    }
+  }
+  data.profileSectionOrder = normalizeProfileSectionOrder(data.profileSectionOrder);
+  applyProfileSectionOrder(data.profileSectionOrder);
+
   const profileAvatar = document.getElementById('profile-avatar');
   document.title = `${user.nickname} · 霧月乐园`;
   profileAvatar.src = user.avatar;
@@ -585,10 +612,117 @@
     }
   }
 
+  async function saveProfileSectionOrder(order, previousOrder) {
+    status.textContent = '正在保存主页布局…';
+    try {
+      const response = await fetch('/api/social/profile-layout', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || '主页布局保存失败');
+      data.profileSectionOrder = normalizeProfileSectionOrder(result.order);
+      status.textContent = '主页板块顺序已保存。';
+      setTimeout(() => { if (status.textContent === '主页板块顺序已保存。') status.textContent = ''; }, 1400);
+    } catch (error) {
+      applyProfileSectionOrder(previousOrder);
+      status.textContent = error.message;
+    }
+  }
+
+  function enableProfileSectionSorting() {
+    if (!data.isSelf || !profileMain || !profileStatusNode) return;
+    const sections = [...document.querySelectorAll('[data-profile-section]')];
+    let dragging = null;
+    let startOrder = null;
+    let pointerId = null;
+
+    const finishDrag = () => {
+      if (!dragging) return;
+      const changedSection = dragging;
+      dragging = null;
+      changedSection.classList.remove('profile-dragging');
+      document.body.classList.remove('profile-sorting');
+      pointerId = null;
+      const nextOrder = currentProfileSectionOrder();
+      if (startOrder && nextOrder.join('|') !== startOrder.join('|')) saveProfileSectionOrder(nextOrder, startOrder);
+      startOrder = null;
+    };
+
+    const moveToPointer = clientY => {
+      if (!dragging) return;
+      const siblings = [...document.querySelectorAll('[data-profile-section]')].filter(section => section !== dragging && !section.hidden);
+      let before = null;
+      let bestOffset = -Infinity;
+      for (const section of siblings) {
+        const box = section.getBoundingClientRect();
+        const offset = clientY - box.top - box.height / 2;
+        if (offset < 0 && offset > bestOffset) {
+          bestOffset = offset;
+          before = section;
+        }
+      }
+      if (before) profileMain.insertBefore(dragging, before);
+      else profileMain.insertBefore(dragging, profileStatusNode);
+    };
+
+    for (const section of sections) {
+      const head = section.querySelector('.section-head');
+      if (!head || head.querySelector('.profile-sort-handle')) continue;
+      const handle = document.createElement('button');
+      handle.type = 'button';
+      handle.className = 'profile-sort-handle';
+      handle.innerHTML = '<span aria-hidden="true">⋮⋮</span><small>拖动</small>';
+      handle.title = '拖动调整板块顺序';
+      handle.setAttribute('aria-label', '拖动调整这个板块的顺序');
+
+      handle.addEventListener('pointerdown', event => {
+        if (event.button !== undefined && event.button !== 0) return;
+        event.preventDefault();
+        dragging = section;
+        startOrder = currentProfileSectionOrder();
+        pointerId = event.pointerId;
+        section.classList.add('profile-dragging');
+        document.body.classList.add('profile-sorting');
+        handle.setPointerCapture?.(event.pointerId);
+      });
+      handle.addEventListener('pointermove', event => {
+        if (dragging !== section || pointerId !== event.pointerId) return;
+        event.preventDefault();
+        moveToPointer(event.clientY);
+      });
+      handle.addEventListener('pointerup', event => {
+        if (dragging !== section || pointerId !== event.pointerId) return;
+        handle.releasePointerCapture?.(event.pointerId);
+        finishDrag();
+      });
+      handle.addEventListener('pointercancel', finishDrag);
+      handle.addEventListener('keydown', event => {
+        if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+        event.preventDefault();
+        const previousOrder = currentProfileSectionOrder();
+        const visible = [...document.querySelectorAll('[data-profile-section]')].filter(item => !item.hidden);
+        const index = visible.indexOf(section);
+        if (event.key === 'ArrowUp' && index > 0) {
+          profileMain.insertBefore(section, visible[index - 1]);
+        } else if (event.key === 'ArrowDown' && index >= 0 && index < visible.length - 1) {
+          profileMain.insertBefore(visible[index + 1], section);
+        } else {
+          return;
+        }
+        saveProfileSectionOrder(currentProfileSectionOrder(), previousOrder);
+      });
+
+      head.append(handle);
+    }
+  }
+
   renderLinkedAccounts();
   renderScores();
   renderGameRecords();
   renderRecentActivity();
+  enableProfileSectionSorting();
 
   const ach = document.getElementById('achievements');
   const achievements = Array.isArray(data.achievements) ? data.achievements : [];
