@@ -197,7 +197,15 @@ function renderComment(item, rootArticle, isReply = false) {
   const message = document.createElement('p'); message.className = 'comment-message'; message.textContent = item.message;
   const meta = document.createElement('div'); meta.className = 'comment-meta';
   const time = document.createElement('time'); time.dateTime = item.time; time.textContent = new Date(item.time).toLocaleString('zh-CN');
-  const province = document.createElement('span'); province.className = 'comment-province'; province.textContent = `IP属地：${item.province || '未知'}`;
+  const province = document.createElement('span'); province.className = 'comment-province';
+  const country = item.country || '未知';
+  const region = item.province || '未知';
+  const locationText = country === '中国' && region !== '未知' && region !== '未记录'
+    ? `中国 · ${region}`
+    : country !== '未知' && country !== '未记录'
+      ? country
+      : region;
+  province.textContent = `IP属地：${locationText || '未知'}`;
   const reply = document.createElement('button'); reply.type = 'button'; reply.className = 'reply-trigger'; reply.textContent = '回复';
   reply.addEventListener('click', () => openReplyForm(item, isReply ? rootArticle : article));
   meta.append(time, province, reactionButton(item, 'up'), reactionButton(item, 'down'), reply);

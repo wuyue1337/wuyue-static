@@ -325,6 +325,20 @@
 
   function renderScores() {
     scores.replaceChildren();
+
+    const profileAbilities = Array.isArray(data.profileData?.abilities) ? data.profileData.abilities : [];
+    if (profileAbilities.length) {
+      for (const card of profileAbilities) {
+        const variants = Array.isArray(card.variants) ? card.variants.filter(Boolean) : [];
+        if (!variants.length) continue;
+        const test = card.showcaseKey || '';
+        const main = test ? chooseVariant(test, variants) : variants[0];
+        addScoreCard({ test, title: card.title || card.id || '能力测试', main, variants });
+      }
+      if (!scores.children.length) scores.innerHTML = '<p class="empty">还没有排行榜成绩。</p>';
+      return;
+    }
+
     let count = 0;
     if (data.scores.reaction) {
       addScoreCard({ title: '反应力', main: { id: 'reaction', label: '5 次平均', value: `${data.scores.reaction} ms`, sub: '', rank: ranks.reaction } }); count++;
@@ -341,7 +355,91 @@
     if (!count) scores.innerHTML = '<p class="empty">还没有排行榜成绩。</p>';
   }
 
+  function renderGameRecords() {
+    const host = document.getElementById('game-records');
+    const card = document.getElementById('game-records-card');
+    if (!host || !card) return;
+    const games = Array.isArray(data.profileData?.games) ? data.profileData.games : [];
+    host.replaceChildren();
+    if (!games.length) {
+      host.innerHTML = '<p class="empty">还没有可展示的长期游戏战绩。</p>';
+      return;
+    }
+
+    for (const game of games) {
+      const item = document.createElement(game.url ? 'a' : 'div');
+      item.className = 'game-record';
+      if (game.url) item.href = game.url;
+
+      const head = document.createElement('div');
+      head.className = 'game-record-head';
+      const title = document.createElement('strong');
+      title.textContent = game.title || game.id || '游戏';
+      const arrow = document.createElement('span');
+      arrow.textContent = game.url ? '进入游戏 ↗' : '';
+      head.append(title, arrow);
+
+      const stats = document.createElement('div');
+      stats.className = 'game-record-stats';
+      for (const stat of Array.isArray(game.stats) ? game.stats : []) {
+        const cell = document.createElement('span');
+        const value = document.createElement('b');
+        value.textContent = stat.value ?? '—';
+        const label = document.createElement('small');
+        label.textContent = stat.label || '';
+        cell.append(value, label);
+        stats.append(cell);
+      }
+
+      item.append(head, stats);
+      if (game.meta) {
+        const meta = document.createElement('small');
+        meta.className = 'game-record-meta';
+        meta.textContent = game.meta;
+        item.append(meta);
+      }
+      host.append(item);
+    }
+  }
+
+  function renderRecentActivity() {
+    const host = document.getElementById('recent-activity');
+    if (!host) return;
+    const activity = Array.isArray(data.profileData?.activity) ? data.profileData.activity : [];
+    host.replaceChildren();
+    if (!activity.length) {
+      host.innerHTML = '<p class="empty">最近还没有可展示的活动。</p>';
+      return;
+    }
+
+    for (const entry of activity) {
+      const item = document.createElement(entry.url ? 'a' : 'div');
+      item.className = `profile-activity-item activity-${entry.type || 'default'}`;
+      if (entry.url) item.href = entry.url;
+
+      const marker = document.createElement('span');
+      marker.className = 'profile-activity-marker';
+      marker.textContent = entry.type === 'game' ? '◆' : entry.type === 'comment' || entry.type === 'reply' ? '●' : '✦';
+
+      const copy = document.createElement('div');
+      const title = document.createElement('strong');
+      title.textContent = entry.title || '活动';
+      const detail = document.createElement('small');
+      detail.textContent = entry.detail || '';
+      copy.append(title, detail);
+
+      const time = document.createElement('time');
+      time.dateTime = entry.time || '';
+      time.textContent = entry.time ? new Date(entry.time).toLocaleString('zh-CN') : '';
+
+      item.append(marker, copy, time);
+      host.append(item);
+    }
+  }
+
   renderScores();
+  renderGameRecords();
+  renderRecentActivity();
 
   const ach = document.getElementById('achievements');
   const achievements = Array.isArray(data.achievements) ? data.achievements : [];
