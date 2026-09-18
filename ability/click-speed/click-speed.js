@@ -87,7 +87,7 @@ function reset() {
   icon.textContent = '✧';
   stage.disabled = false;
   resultActions.hidden = true;
-  displayStage('ready', '手速准备好了吗？', '点击这里，第一下就开始计时', '点击开始');
+  displayStage('ready', '准备好了吗？', '点击这里，第一下就开始计时', '点击开始');
   status.textContent = '第一下点击会计入成绩；倒计时结束后会弹出成绩。';
 }
 
