@@ -225,6 +225,23 @@
     if (!started) beginTimer(); score += 1; updateHud(); advanceRow();
   }
 
+  function laneFromPointer(event) {
+    const rect = tileBoard.getBoundingClientRect();
+    if (!rect.width) return -1;
+    const x = Math.max(0, Math.min(rect.width - 0.001, event.clientX - rect.left));
+    return Math.max(0, Math.min(selectedKeyCount - 1, Math.floor(x / (rect.width / selectedKeyCount))));
+  }
+
+  function handleTrackPointer(event) {
+    const coarsePointer = window.matchMedia?.('(pointer: coarse)').matches;
+    if (event.pointerType === 'mouse' && !coarsePointer) return;
+    if (gameSession.hidden || over) return;
+    const lane = laneFromPointer(event);
+    if (lane < 0) return;
+    event.preventDefault();
+    pressLane(lane);
+  }
+
   function prepareRound() {
     clearTimeout(readyTimer); cancelAnimationFrame(timerRaf); cancelAnimationFrame(motionRaf); timerRaf = 0; motionRaf = 0; lastMotionAt = 0; motionVelocity = 0;
     armed = false; started = false; over = false; score = 0; startedAt = 0; endedAt = 0; lastResultStats = null;
@@ -285,6 +302,7 @@
     }
   });
 
+  tileBoard.addEventListener('pointerdown', handleTrackPointer, { passive: false });
   keyPad.addEventListener('pointerdown', event => { const button = event.target.closest('[data-lane]'); if (!button) return; event.preventDefault(); pressLane(Number(button.dataset.lane)); });
   startSessionButton.addEventListener('click', enterSession); leaveSessionButton.addEventListener('click', leaveSession); submitScoreButton.addEventListener('click', submitScore); resultMenu.addEventListener('click', leaveSession); resultAgain.addEventListener('click', () => { dialog.close(); prepareRound(); });
   window.addEventListener('resize', () => { if (gameSession.hidden) return; syncGeometry(); const steps = rows.length - 1 - activeIndex; targetOffset = steps * rowHeight; displayOffset = targetOffset; motionVelocity = 0; tileTrack.style.transform = `translate3d(0,${displayOffset}px,0)`; });
