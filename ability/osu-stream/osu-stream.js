@@ -53,6 +53,7 @@
   let chartTimer = null;
   let chartSamples = [];
   let latestResult = null;
+  let durationChangeTimer = null;
 
   function codeLabel(code) {
     if (!code) return '?';
@@ -71,8 +72,29 @@
   function selectedDuration() {
     const active = durationButtons.find(button => button.classList.contains('active'));
     if (!active) return 10;
-    if (active.dataset.seconds === 'custom') return Math.max(3, Math.min(120, Number(customTime.value) || 15));
+    if (active.dataset.seconds === 'custom') {
+      return Math.max(3, Math.min(120, Math.round(Number(customTime.value) || 15)));
+    }
     return Number(active.dataset.seconds);
+  }
+
+  function selectedLeaderboardDuration() {
+    const active = durationButtons.find(button => button.classList.contains('active'));
+    if (!active || active.dataset.seconds === 'custom') return null;
+    const value = Number(active.dataset.seconds);
+    return [10, 20, 30].includes(value) ? value : null;
+  }
+
+  function announceDurationChange() {
+    const duration = selectedDuration();
+    const leaderboardDuration = selectedLeaderboardDuration();
+    window.dispatchEvent(new CustomEvent('wuyue:osu-duration-change', {
+      detail: {
+        duration,
+        leaderboardDuration,
+        ranked: leaderboardDuration !== null
+      }
+    }));
   }
 
   function resetStats() {
@@ -259,13 +281,16 @@
     resultPeak.textContent = peak.toFixed(1);
     resultUr.textContent = ur == null ? '—' : ur.toFixed(1);
     resultAlt.textContent = `${alt.toFixed(1)}%`;
-    const rankable = !manual && mode === 'stream' && [10,20,30].includes(duration) && alt >= 90 && taps.length >= 8;
+    const leaderboardDuration = selectedLeaderboardDuration();
+    const rankable = !manual && mode === 'stream' && leaderboardDuration === duration && alt >= 90 && taps.length >= 8;
     submitScore.disabled = !rankable;
     resultNote.textContent = manual
       ? '手动停止的测试仅供查看，不计入排行榜。'
       : rankable
-        ? '本次成绩符合排行榜提交条件。'
-        : '排行榜仅接受 10 / 20 / 30 秒的 Stream 交替模式，且交替准确率需 ≥ 90%。';
+        ? `本次 ${duration} 秒成绩符合排行榜提交条件。`
+        : leaderboardDuration == null
+          ? '自定义时长仅用于测试，不参与排行榜。排行榜只保留 10 / 20 / 30 秒。'
+          : '排行榜仅接受 10 / 20 / 30 秒的 Stream 交替模式，且交替准确率需 ≥ 90%。';
     submitStatus.textContent = '';
     if (!manual && resultDialog.showModal) resultDialog.showModal();
   }
@@ -274,6 +299,7 @@
     if (running) return;
     resetStats();
     duration = selectedDuration();
+    announceDurationChange();
     armed = true;
     stage.classList.add('is-armed');
     stageKicker.textContent = 'ARMED';
@@ -355,8 +381,29 @@
       item.setAttribute('aria-pressed', String(active));
     });
     customWrap.hidden = button.dataset.seconds !== 'custom';
+    if (button.dataset.seconds === 'custom') {
+      customTime.value = String(selectedDuration());
+    }
     resetStats();
+    announceDurationChange();
   }));
+
+  customTime.addEventListener('input', () => {
+    if (running || armed) return;
+    clearTimeout(durationChangeTimer);
+    durationChangeTimer = setTimeout(() => {
+      resetStats();
+      announceDurationChange();
+    }, 250);
+  });
+
+  customTime.addEventListener('change', () => {
+    if (running || armed) return;
+    clearTimeout(durationChangeTimer);
+    customTime.value = String(selectedDuration());
+    resetStats();
+    announceDurationChange();
+  });
 
   startButton.addEventListener('click', prepareRun);
   stopButton.addEventListener('click', () => finishRun(true));
