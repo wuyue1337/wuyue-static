@@ -254,21 +254,90 @@ $('nickname-form').addEventListener('submit', async event => {
   } catch (error) { message(error.message); }
   finally { button.disabled = false; }
 });
+const AVATAR_MAX_SIDE = 2048;
+const AVATAR_MAX_BYTES = 1024 * 1024;
+
+async function decodeAvatarImage(file) {
+  if (!file?.type?.startsWith('image/')) throw new Error('请选择图片文件。');
+  if ('createImageBitmap' in window) {
+    try { return await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+    catch { /* Safari / HEIC 等情况回退到 img 解码 */ }
+  }
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.decoding = 'async';
+    await new Promise((resolve, reject) => {
+      image.onload = resolve;
+      image.onerror = () => reject(new Error('这张图片无法读取，请尝试换一张或先保存为 JPEG / PNG。'));
+      image.src = url;
+    });
+    return image;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function canvasToJpeg(canvas, quality) {
+  return new Promise((resolve, reject) => canvas.toBlob(
+    blob => blob ? resolve(blob) : reject(new Error('头像处理失败，请换一张图片重试。')),
+    'image/jpeg',
+    quality
+  ));
+}
+
+async function prepareAvatar(file) {
+  const source = await decodeAvatarImage(file);
+  try {
+    const sourceWidth = source.width || source.naturalWidth;
+    const sourceHeight = source.height || source.naturalHeight;
+    if (!sourceWidth || !sourceHeight) throw new Error('无法识别图片尺寸。');
+
+    let scale = Math.min(1, AVATAR_MAX_SIDE / Math.max(sourceWidth, sourceHeight));
+    let width = Math.max(1, Math.round(sourceWidth * scale));
+    let height = Math.max(1, Math.round(sourceHeight * scale));
+
+    for (let resizePass = 0; resizePass < 4; resizePass++) {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext('2d', { alpha: false });
+      if (!context) throw new Error('当前浏览器无法处理头像图片。');
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, width, height);
+      context.drawImage(source, 0, 0, width, height);
+
+      for (const quality of [0.9, 0.82, 0.74, 0.66, 0.58]) {
+        const blob = await canvasToJpeg(canvas, quality);
+        if (blob.size <= AVATAR_MAX_BYTES) {
+          return await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(new Error('头像处理失败，请重试。'));
+            reader.readAsDataURL(blob);
+          });
+        }
+      }
+
+      width = Math.max(1, Math.round(width * 0.8));
+      height = Math.max(1, Math.round(height * 0.8));
+    }
+    throw new Error('图片处理后仍然过大，请尝试换一张图片。');
+  } finally {
+    source.close?.();
+  }
+}
+
 $('avatar-form').addEventListener('submit', async event => {
   event.preventDefault();
   const file = $('avatar-file').files[0];
   if (!file) return;
-  if (!['image/png', 'image/jpeg'].includes(file.type) || file.size > 1024 * 1024) { message('请选择 1 MB 以内的 PNG 或 JPEG 图片。'); return; }
+  if (!file.type?.startsWith('image/')) { message('请选择图片文件。'); return; }
   const button = event.currentTarget.querySelector('button');
   button.disabled = true;
-  message('');
+  message('正在处理头像…');
   try {
-    const image = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error('图片读取失败'));
-      reader.readAsDataURL(file);
-    });
+    const image = await prepareAvatar(file);
     const data = await request('/api/auth/avatar', { method: 'POST', headers: { 'content-type': 'application/json', 'x-csrf-token': auth.csrf }, body: JSON.stringify({ image }) });
     auth.user.avatar = data.avatar;
     drawProfile(auth.user);
