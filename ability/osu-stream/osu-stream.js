@@ -412,6 +412,13 @@
 
   submitScore.addEventListener('click', async () => {
     if (!latestResult || !latestResult.completed || submitScore.disabled) return;
+    try {
+      if (!window.WuyueScoreAuth?.ensureAccount) throw new Error('账号组件加载失败，请刷新页面重试');
+      await window.WuyueScoreAuth.ensureAccount();
+    } catch (error) {
+      submitStatus.textContent = error.message;
+      return;
+    }
     submitScore.disabled = true;
     submitStatus.textContent = '正在提交…';
     try {
