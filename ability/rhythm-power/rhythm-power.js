@@ -316,5 +316,13 @@
   window.addEventListener('resize', () => { if (gameSession.hidden) return; syncGeometry(); const steps = rows.length - 1 - activeIndex; targetOffset = steps * rowHeight; displayOffset = targetOffset; motionVelocity = 0; tileTrack.style.transform = `translate3d(0,${displayOffset}px,0)`; });
   window.addEventListener('touchmove', event => { if (!gameSession.hidden) event.preventDefault(); }, { passive: false });
 
-  renderKeyControls(); selectMode('random'); updateSetupSummary(); loadLeaderboard();
+  renderKeyControls(); selectMode('random');
+  {
+    const params = new URLSearchParams(location.search);
+    const linkedKeys = Number(params.get('keys'));
+    const linkedDuration = Number(params.get('duration'));
+    if (keyCountOptions.includes(linkedKeys)) selectKeyCount(linkedKeys);
+    if (durationOptions.includes(linkedDuration)) selectDuration(linkedDuration);
+  }
+  updateSetupSummary(); loadLeaderboard();
 })();

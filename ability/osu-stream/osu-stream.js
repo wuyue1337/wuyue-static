@@ -445,6 +445,17 @@
   });
 
   window.addEventListener('resize', drawChart);
+  {
+    const linkedDuration = Number(new URLSearchParams(location.search).get('duration'));
+    if ([10, 20, 30].includes(linkedDuration)) {
+      durationButtons.forEach(button => {
+        const active = Number(button.dataset.seconds) === linkedDuration;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+      customWrap.hidden = true;
+    }
+  }
   syncKeys();
   resetStats();
 })();

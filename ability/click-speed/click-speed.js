@@ -164,5 +164,17 @@ submitForm.addEventListener('submit', async event => {
   }
 });
 
+{
+  const linkedDuration = Number(new URLSearchParams(location.search).get('duration'));
+  if ([5, 10, 15, 30, 60].includes(linkedDuration)) {
+    duration = linkedDuration;
+    durationButtons.forEach(button => {
+      const active = Number(button.dataset.seconds) === duration;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    boardTitle.textContent = `点击速度排行榜 · ${duration} 秒`;
+  }
+}
 reset();
 leaderboard.load(duration);
