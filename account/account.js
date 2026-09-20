@@ -51,7 +51,7 @@ function show(view) {
   $('login-tab').classList.toggle('active', view === 'login');
   $('register-tab').classList.toggle('active', view === 'register');
   $('page-title').textContent = view === 'profile' ? '个人资料' : view === 'register' ? '加入霧月乐园' : view === 'reset' ? '找回密码' : '欢迎回来';
-  $('page-intro').textContent = view === 'profile' ? '在这里更新用户名、昵称、头像、邮箱和个人状态。' : view === 'register' ? '创建一个属于你的账号。' : view === 'reset' ? '使用已验证邮箱收取验证码并重置密码。' : '登录后可以查看和修改你的个人资料。';
+  $('page-intro').textContent = view === 'profile' ? '在这里更新用户名、昵称、头像、邮箱和个人状态。' : view === 'register' ? '验证邮箱后创建一个属于你的账号。' : view === 'reset' ? '使用已验证邮箱收取验证码并重置密码。' : '登录后可以查看和修改你的个人资料。';
 }
 function drawProfile(user) {
   $('profile-avatar').src = user.avatar;
@@ -114,6 +114,49 @@ async function submit(form, route) {
   finally { button.disabled = false; }
 }
 $('login-form').addEventListener('submit', event => { event.preventDefault(); submit(event.currentTarget, '/api/auth/login'); });
+
+$('register-email-send').addEventListener('click', async () => {
+  const button = $('register-email-send');
+  const original = '发送邮箱验证码';
+  const username = $('register-username').value.trim();
+  const email = $('register-email').value.trim();
+  if (!$('register-username').checkValidity()) {
+    $('register-username').reportValidity();
+    return;
+  }
+  if (!$('register-email').checkValidity()) {
+    $('register-email').reportValidity();
+    return;
+  }
+
+  let cooling = false;
+  button.disabled = true;
+  button.textContent = '发送中…';
+  inlineMessage('register-email-status', '正在发送注册验证码…');
+  message('正在发送注册验证码…');
+  try {
+    const data = await request('/api/auth/register/email/request', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ username, email })
+    });
+    const text = data.message || '注册验证码已发送。';
+    inlineMessage('register-email-status', text, true);
+    message(text, true);
+    $('register-email-code').focus();
+    cooling = true;
+    startButtonCooldown(button, data.cooldownSeconds || 60, original);
+  } catch (error) {
+    inlineMessage('register-email-status', error.message);
+    message(error.message);
+  } finally {
+    if (!cooling) {
+      button.disabled = false;
+      button.textContent = original;
+    }
+  }
+});
+$('register-email').addEventListener('input', () => inlineMessage('register-email-status', '邮箱改变后需要使用该邮箱收到的验证码。'));
 $('register-form').addEventListener('submit', event => { event.preventDefault(); submit(event.currentTarget, '/api/auth/register'); });
 $('forgot-password').addEventListener('click', () => { history.replaceState(null, '', '/account/?view=reset'); show('reset'); message(''); });
 $('back-login').addEventListener('click', () => { history.replaceState(null, '', '/account/?view=login'); show('login'); message(''); });
