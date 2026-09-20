@@ -500,6 +500,12 @@
   color:#aaaec7;
   letter-spacing:0
 }
+.world-member-no.founder{
+  border-color:#e4b4d57a;
+  background:linear-gradient(120deg,#6c3d63,#4c3c72);
+  color:#ffe4f5;
+  box-shadow:0 0 10px #d58fca24
+}
 .world-message-meta time{
   margin-left:auto;
   flex:0 0 auto;
