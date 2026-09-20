@@ -404,6 +404,17 @@
     const selected = data.showcase?.[test];
     const chosen = variants.find(item => item.id === selected);
     if (chosen) return chosen;
+
+    // 音游底力同时包含 /s 与 BPM 两种完全不同的量纲，不能直接拿 raw metric 比大小。
+    // 未手动指定主页展示时，优先展示相对排行榜位置更好的那一项。
+    if (test === 'rhythmPower' && variants.some(item => Number.isFinite(Number(item.percentile)))) {
+      return [...variants].sort((a, b) => {
+        const aPercentile = Number.isFinite(Number(a.percentile)) ? Number(a.percentile) : -1;
+        const bPercentile = Number.isFinite(Number(b.percentile)) ? Number(b.percentile) : -1;
+        return bPercentile - aPercentile || (a.rank || Infinity) - (b.rank || Infinity);
+      })[0] || null;
+    }
+
     return [...variants].sort((a, b) => b.metric - a.metric || (a.rank || Infinity) - (b.rank || Infinity))[0] || null;
   }
 
