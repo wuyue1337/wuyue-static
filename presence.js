@@ -53,7 +53,7 @@
   }
   function ensureStyles() {
     if (document.querySelector('link[data-wuyue-presence]')) return;
-    const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = 'https://wuyue1337.github.io/wuyue-static/presence.css?v=20260920-1'; link.dataset.wuyuePresence = '1'; document.head.appendChild(link);
+    const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = 'https://wuyue1337.github.io/wuyue-static/presence.css?v=20260920-3'; link.dataset.wuyuePresence = '1'; document.head.appendChild(link);
   }
   function savedPanelOpen() {
     try { return localStorage.getItem(PANEL_KEY) === '1'; } catch (_) { return false; }
@@ -240,7 +240,7 @@
     const profileHref = username ? `/profile/?user=${username}` : '';
     const avatar = escapeHtml(normalizeAvatarUrl(user.avatar));
     const nickname = escapeHtml(user.nickname || '已注销用户');
-    const member = user.memberNo ? `<span class="world-member-no">No.${escapeHtml(user.memberNo)}</span>` : '';
+    const member = user.memberNo ? `<span class="world-member-no${Number(user.memberNo) <= 100 ? ' founder' : ''}">No.${escapeHtml(user.memberNo)}</span>` : '';
     const role = messageRoleBadge(user.role);
     const name = profileHref ? `<a href="${profileHref}">${nickname}</a>` : `<strong>${nickname}</strong>`;
     const avatarNode = profileHref
